@@ -1,6 +1,5 @@
 Sympho
-
----
+===
 
 simple discord music bot for pse.
 
