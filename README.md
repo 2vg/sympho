@@ -23,6 +23,7 @@ clone, set token to `DISCORD_TOKEN` env var, then `cargo build`
 ## TODO
 
 - [ ]: Songbirdの例から派生したので、コードを綺麗にする
+- [ ]: `unwrap`は邪悪なので、コードから消し飛ばす。(今のところバレてないけど、`Sympho`をクラッシュさせるコマンドのやり方が存在してしまっているので)
 - [ ]: `builtin-queue`に頼らず、`Sympho`自身の`queue`を持つコードに変更</br>
 現状`Sympho`はソースを一つのみしか再生しないので、`builtin-queue`はここでは適さないため。
 ssを再生する機能は時間があったら作るが、順番に再生ではなくミキシングにしないといけないので、結局`builtin-queue`は要らない。
