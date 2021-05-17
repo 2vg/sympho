@@ -72,8 +72,8 @@ struct General;
 
 // event
 struct TrackStartNotifier {
-    chan_id: ChannelId,
-    http: Arc<Http>,
+    // chan_id: ChannelId,
+    // http: Arc<Http>,
 }
 
 #[async_trait]
@@ -89,8 +89,8 @@ impl VoiceEventHandler for TrackStartNotifier {
 
 struct TrackEndNotifier {
     handler: Arc<serenity::prelude::Mutex<Call>>,
-    chan_id: ChannelId,
-    http: Arc<Http>,
+    // chan_id: ChannelId,
+    // http: Arc<Http>,
 }
 
 #[async_trait]
@@ -205,8 +205,8 @@ async fn join(ctx: &Context, msg: &Message) -> CommandResult {
         handle.add_global_event(
             Event::Track(TrackEvent::Play),
             TrackStartNotifier {
-                chan_id,
-                http: send_http.clone(),
+                // chan_id,
+                // http: send_http.clone(),
             },
         );
 
@@ -214,8 +214,8 @@ async fn join(ctx: &Context, msg: &Message) -> CommandResult {
             Event::Track(TrackEvent::End),
             TrackEndNotifier {
                 handler: handle_lock.clone(),
-                chan_id,
-                http: send_http.clone(),
+                // chan_id,
+                // http: send_http.clone(),
             },
         );
 
