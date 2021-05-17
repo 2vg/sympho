@@ -30,7 +30,9 @@ use serenity::{
 use songbird::{
     create_player,
     input::{restartable::Restartable, Input},
-    Call, Event, EventContext, EventHandler as VoiceEventHandler, SerenityInit, TrackEvent,
+    tracks::PlayMode,
+    Call, Event, EventContext, EventHandler as VoiceEventHandler, SerenityInit, Songbird,
+    TrackEvent,
 };
 
 use youtube_dl::{YoutubeDl, YoutubeDlOutput};
@@ -159,47 +161,34 @@ async fn main() {
 async fn join(ctx: &Context, msg: &Message) -> CommandResult {
     let guild = msg.guild(&ctx.cache).await.unwrap();
     let guild_id = guild.id;
-    let roles = &msg.member.as_ref().unwrap().roles;
 
-    if !has_dj_user(&guild, roles) {
+    if !check_user_can_use_command(&guild, msg) {
+        check_msg(msg.reply(ctx, "You are not in a voice channel >_<!").await);
         return Ok(());
     };
 
-    let channel_id = guild
+    let connect_to = guild
         .voice_states
         .get(&msg.author.id)
-        .and_then(|voice_state| voice_state.channel_id);
-
-    let connect_to = match channel_id {
-        Some(channel) => channel,
-        None => {
-            check_msg(msg.reply(ctx, "Not in a voice channel >_<!").await);
-
-            return Ok(());
-        }
-    };
+        .and_then(|voice_state| voice_state.channel_id)
+        .unwrap();
 
     let manager = songbird::get(ctx)
         .await
         .expect("Songbird Voice client placed in at initialisation.")
         .clone();
 
-    // check bot currently using at other channel
-    if let Some(handler_lock) = manager.get(guild_id) {
-        let mut handler = handler_lock.lock().await;
+    if check_bot_using_at_other_chan(&manager, &guild, &msg).await {
+        check_msg(
+            msg.channel_id
+                .say(
+                    &ctx.http,
+                    &format!("The bot is currently playing at {}", connect_to.mention()),
+                )
+                .await,
+        );
 
-        let queue = handler.queue();
-        let current = queue.current();
-
-        if current.is_some() {
-            check_msg(
-                msg.channel_id
-                    .say(&ctx.http, &format!("The bot is currently playing at {}", connect_to.mention()))
-                    .await,
-            );
-
-            return Ok(());
-        }
+        return Ok(());
     }
 
     let (handle_lock, success) = manager.join(guild_id, connect_to).await;
@@ -251,9 +240,9 @@ async fn join(ctx: &Context, msg: &Message) -> CommandResult {
 async fn leave(ctx: &Context, msg: &Message) -> CommandResult {
     let guild = msg.guild(&ctx.cache).await.unwrap();
     let guild_id = guild.id;
-    let roles = &msg.member.as_ref().unwrap().roles;
 
-    if !has_dj_user(&guild, roles) {
+    if !check_user_can_use_command(&guild, msg) {
+        check_msg(msg.reply(ctx, "You are not in a voice channel >_<!").await);
         return Ok(());
     };
 
@@ -261,6 +250,26 @@ async fn leave(ctx: &Context, msg: &Message) -> CommandResult {
         .await
         .expect("Songbird Voice client placed in at initialisation.")
         .clone();
+
+    let connect_to = guild
+        .voice_states
+        .get(&msg.author.id)
+        .and_then(|voice_state| voice_state.channel_id)
+        .unwrap();
+
+    if check_bot_using_at_other_chan(&manager, &guild, msg).await {
+        check_msg(
+            msg.channel_id
+                .say(
+                    &ctx.http,
+                    &format!("The bot is currently playing at {}", connect_to.mention()),
+                )
+                .await,
+        );
+
+        return Ok(());
+    }
+
     let has_handler = manager.get(guild_id).is_some();
 
     if has_handler {
@@ -317,9 +326,9 @@ async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
 
     let guild = msg.guild(&ctx.cache).await.unwrap();
     let guild_id = guild.id;
-    let roles = &msg.member.as_ref().unwrap().roles;
 
-    if !has_dj_user(&guild, roles) {
+    if !check_user_can_use_command(&guild, msg) {
+        check_msg(msg.reply(ctx, "You are not in a voice channel >_<!").await);
         return Ok(());
     };
 
@@ -327,6 +336,10 @@ async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         .await
         .expect("Songbird Voice client placed in at initialisation.")
         .clone();
+
+    if check_bot_using_at_other_chan(&manager, &guild, msg).await {
+        return Ok(());
+    }
 
     if let Some(handler_lock) = manager.get(guild_id) {
         let mut handler = handler_lock.lock().await;
@@ -364,7 +377,7 @@ async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
                 .await,
         );
     } else {
-        check_msg(msg.reply(ctx, "Not in a voice channel").await);
+        check_msg(msg.reply(ctx, "You are not in a voice channel").await);
     }
 
     Ok(())
@@ -375,9 +388,9 @@ async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
 async fn current(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     let guild = msg.guild(&ctx.cache).await.unwrap();
     let guild_id = guild.id;
-    let roles = &msg.member.as_ref().unwrap().roles;
 
-    if !has_dj_user(&guild, roles) {
+    if !check_user_can_use_command(&guild, msg) {
+        check_msg(msg.reply(ctx, "You are not in a voice channel >_<!").await);
         return Ok(());
     };
 
@@ -385,6 +398,10 @@ async fn current(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
         .await
         .expect("Songbird Voice client placed in at initialisation.")
         .clone();
+
+    if check_bot_using_at_other_chan(&manager, &guild, msg).await {
+        return Ok(());
+    }
 
     if let Some(handler_lock) = manager.get(guild_id) {
         let handler = handler_lock.lock().await;
@@ -412,7 +429,7 @@ async fn current(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
             }
         };
     } else {
-        check_msg(msg.reply(ctx, "Not in a voice channel").await);
+        check_msg(msg.reply(ctx, "You are not in a voice channel").await);
     }
 
     Ok(())
@@ -436,11 +453,20 @@ async fn volume(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
 
     let guild = msg.guild(&ctx.cache).await.unwrap();
     let guild_id = guild.id;
-    let roles = &msg.member.as_ref().unwrap().roles;
 
-    if !has_dj_user(&guild, roles) {
+    if !check_user_can_use_command(&guild, msg) {
+        check_msg(msg.reply(ctx, "You are not in a voice channel >_<!").await);
         return Ok(());
     };
+
+    let manager = songbird::get(ctx)
+        .await
+        .expect("Songbird Voice client placed in at initialisation.")
+        .clone();
+
+    if check_bot_using_at_other_chan(&manager, &guild, msg).await {
+        return Ok(());
+    }
 
     let volume = volume as f32 / 100.0;
 
@@ -449,11 +475,6 @@ async fn volume(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         let mut g_volume = g_volume_mutex.lock().unwrap();
         *g_volume = volume;
     }
-
-    let manager = songbird::get(ctx)
-        .await
-        .expect("Songbird Voice client placed in at initialisation.")
-        .clone();
 
     if let Some(handler_lock) = manager.get(guild_id) {
         let handler = handler_lock.lock().await;
@@ -467,7 +488,7 @@ async fn volume(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
             None => {}
         };
     } else {
-        check_msg(msg.reply(ctx, "Not in a voice channel").await);
+        check_msg(msg.reply(ctx, "You are not in a voice channel").await);
     }
 
     Ok(())
@@ -478,9 +499,9 @@ async fn volume(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
 async fn skip(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     let guild = msg.guild(&ctx.cache).await.unwrap();
     let guild_id = guild.id;
-    let roles = &msg.member.as_ref().unwrap().roles;
 
-    if !has_dj_user(&guild, roles) {
+    if !check_user_can_use_command(&guild, msg) {
+        check_msg(msg.reply(ctx, "You are not in a voice channel >_<!").await);
         return Ok(());
     };
 
@@ -488,6 +509,10 @@ async fn skip(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
         .await
         .expect("Songbird Voice client placed in at initialisation.")
         .clone();
+
+    if check_bot_using_at_other_chan(&manager, &guild, msg).await {
+        return Ok(());
+    }
 
     if let Some(handler_lock) = manager.get(guild_id) {
         let mut handler = handler_lock.lock().await;
@@ -523,7 +548,7 @@ async fn skip(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
                 .await,
         );
     } else {
-        check_msg(msg.reply(ctx, "Not in a voice channel").await);
+        check_msg(msg.reply(ctx, "You are not in a voice channel").await);
     }
 
     Ok(())
@@ -534,9 +559,9 @@ async fn skip(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
 async fn pause(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     let guild = msg.guild(&ctx.cache).await.unwrap();
     let guild_id = guild.id;
-    let roles = &msg.member.as_ref().unwrap().roles;
 
-    if !has_dj_user(&guild, roles) {
+    if !check_user_can_use_command(&guild, msg) {
+        check_msg(msg.reply(ctx, "You are not in a voice channel >_<!").await);
         return Ok(());
     };
 
@@ -545,12 +570,16 @@ async fn pause(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
         .expect("Songbird Voice client placed in at initialisation.")
         .clone();
 
+    if check_bot_using_at_other_chan(&manager, &guild, msg).await {
+        return Ok(());
+    }
+
     if let Some(handler_lock) = manager.get(guild_id) {
         let handler = handler_lock.lock().await;
         let queue = handler.queue();
         let _ = queue.pause();
     } else {
-        check_msg(msg.reply(ctx, "Not in a voice channel").await);
+        check_msg(msg.reply(ctx, "You are not in a voice channel").await);
     }
 
     Ok(())
@@ -561,9 +590,9 @@ async fn pause(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
 async fn resume(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     let guild = msg.guild(&ctx.cache).await.unwrap();
     let guild_id = guild.id;
-    let roles = &msg.member.as_ref().unwrap().roles;
 
-    if !has_dj_user(&guild, roles) {
+    if !check_user_can_use_command(&guild, msg) {
+        check_msg(msg.reply(ctx, "You are not in a voice channel >_<!").await);
         return Ok(());
     };
 
@@ -572,12 +601,16 @@ async fn resume(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
         .expect("Songbird Voice client placed in at initialisation.")
         .clone();
 
+    if check_bot_using_at_other_chan(&manager, &guild, msg).await {
+        return Ok(());
+    }
+
     if let Some(handler_lock) = manager.get(guild_id) {
         let handler = handler_lock.lock().await;
         let queue = handler.queue();
         let _ = queue.resume();
     } else {
-        check_msg(msg.reply(ctx, "Not in a voice channel").await);
+        check_msg(msg.reply(ctx, "You are not in a voice channel").await);
     }
 
     Ok(())
@@ -588,9 +621,9 @@ async fn resume(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
 async fn stop(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     let guild = msg.guild(&ctx.cache).await.unwrap();
     let guild_id = guild.id;
-    let roles = &msg.member.as_ref().unwrap().roles;
 
-    if !has_dj_user(&guild, roles) {
+    if !check_user_can_use_command(&guild, msg) {
+        check_msg(msg.reply(ctx, "You are not in a voice channel >_<!").await);
         return Ok(());
     };
 
@@ -598,6 +631,10 @@ async fn stop(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
         .await
         .expect("Songbird Voice client placed in at initialisation.")
         .clone();
+
+    if check_bot_using_at_other_chan(&manager, &guild, msg).await {
+        return Ok(());
+    }
 
     if let Some(handler_lock) = manager.get(guild_id) {
         unsafe {
@@ -616,11 +653,15 @@ async fn stop(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
                 .await,
         );
     } else {
-        check_msg(msg.reply(ctx, "Not in a voice channel").await);
+        check_msg(msg.reply(ctx, "You are not in a voice channel").await);
     }
 
     Ok(())
 }
+
+/*
+ * utility functions
+ */
 
 fn check_msg(result: SerenityResult<Message>) {
     if let Err(why) = result {
@@ -631,7 +672,7 @@ fn check_msg(result: SerenityResult<Message>) {
 fn extract_yt(url: &str) -> Vec<String> {
     let output = YoutubeDl::new(url)
         .flat_playlist(true)
-        .socket_timeout("5")
+        .socket_timeout("3")
         .run();
 
     if let Ok(yt) = output {
@@ -678,6 +719,54 @@ fn has_dj_user(guild: &Guild, roles: &[RoleId]) -> bool {
             }
         }
     }
+
+    false
+}
+
+fn in_channel(guild: &Guild, msg: &Message) -> bool {
+    let channel_id = guild
+        .voice_states
+        .get(&msg.author.id)
+        .and_then(|voice_state| voice_state.channel_id);
+
+    match channel_id {
+        Some(_) => true,
+        None => false,
+    }
+}
+
+fn check_user_can_use_command(guild: &Guild, msg: &Message) -> bool {
+    return has_dj_user(guild, &msg.member.as_ref().unwrap().roles) && in_channel(guild, msg);
+}
+
+// if bot playing music on other channel, return true.
+async fn check_bot_using_at_other_chan(manager: &Songbird, guild: &Guild, msg: &Message) -> bool {
+    if let Some(channel_id) = guild
+        .voice_states
+        .get(&msg.author.id)
+        .and_then(|voice_state| voice_state.channel_id)
+    {
+        if let Some(handler_lock) = manager.get(guild.id) {
+            let handler = handler_lock.lock().await;
+
+            if let Some(bot_channel_id) = handler.current_channel() {
+                if channel_id.0 == bot_channel_id.0 {
+                    return false;
+                }
+
+                let queue = handler.queue();
+                let current = queue.current();
+
+                if let Some(current) = queue.current() {
+                    if let Ok(info) = current.get_info().await {
+                        if info.playing == PlayMode::Play {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+    };
 
     false
 }
