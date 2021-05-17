@@ -80,7 +80,7 @@ struct TrackStartNotifier {
 impl VoiceEventHandler for TrackStartNotifier {
     async fn act(&self, ctx: &EventContext<'_>) -> Option<Event> {
         if let EventContext::Track(&[(_state, track)]) = ctx {
-            track.set_volume(unsafe { *GLOBAL_VOLUME.get().unwrap().lock().unwrap() });
+            let _ = track.set_volume(unsafe { *GLOBAL_VOLUME.get().unwrap().lock().unwrap() });
         }
 
         None
@@ -96,32 +96,29 @@ struct TrackEndNotifier {
 #[async_trait]
 impl VoiceEventHandler for TrackEndNotifier {
     async fn act(&self, ctx: &EventContext<'_>) -> Option<Event> {
-        if let EventContext::Track(_track_list) = ctx {
-            let volume = unsafe { *GLOBAL_VOLUME.get().unwrap().lock().unwrap() };
-            let url = unsafe {
-                let q = GLOBAL_QUEUE.get().unwrap();
-                let mut v = q.lock().unwrap();
+        let url = unsafe {
+            let q = GLOBAL_QUEUE.get().unwrap();
+            let mut v = q.lock().unwrap();
 
-                if v.len() > 0 {
-                    let temp = v[0].clone();
-                    v.remove(0);
-                    temp
-                } else {
-                    return None;
-                }
-            };
-
-            let source = if let Ok(source) = Restartable::ytdl(url.clone(), true).await {
-                source
-            } else if let Ok(source) = Restartable::ffmpeg(url.clone(), true).await {
-                source
+            if v.len() > 0 {
+                let temp = v[0].clone();
+                v.remove(0);
+                temp
             } else {
                 return None;
-            };
+            }
+        };
 
-            let mut handler = self.handler.lock().await;
-            play_from_source(&mut handler, source.into());
-        }
+        let source = if let Ok(source) = Restartable::ytdl(url.clone(), true).await {
+            source
+        } else if let Ok(source) = Restartable::ffmpeg(url.clone(), true).await {
+            source
+        } else {
+            return None;
+        };
+
+        let mut handler = self.handler.lock().await;
+        play_from_source(&mut handler, source.into());
 
         None
     }
