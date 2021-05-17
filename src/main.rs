@@ -47,7 +47,7 @@ made by uru(ururu#5687)
 
 !join: Join the VC channel with the user who called !join
 !leave: leave from the current channel
-!play <youtube url>: play music. supported single video, and playlist
+!play <youtube, soundcloud url>: play music. supported single video, and playlist
 !current: shows the title of the music currently playing
 !volume <1 - 100>: set the music volume
 !skip: skip the music currently playing
@@ -754,10 +754,7 @@ async fn check_bot_using_at_other_chan(manager: &Songbird, guild: &Guild, msg: &
                     return false;
                 }
 
-                let queue = handler.queue();
-                let current = queue.current();
-
-                if let Some(current) = queue.current() {
+                if let Some(current) = handler.queue().current() {
                     if let Ok(info) = current.get_info().await {
                         if info.playing == PlayMode::Play {
                             return true;
