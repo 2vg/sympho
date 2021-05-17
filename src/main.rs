@@ -282,7 +282,7 @@ async fn leave(ctx: &Context, msg: &Message) -> CommandResult {
 
             let handler = handler_lock.lock().await;
             let queue = handler.queue();
-            queue.stop()?;
+            queue.stop();
         };
     }
 
@@ -616,37 +616,6 @@ async fn resume(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
 
 #[command]
 #[only_in(guilds)]
-async fn enable_loop(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
-    let guild = msg.guild(&ctx.cache).await.unwrap();
-    let guild_id = guild.id;
-
-    if !check_user_can_use_command(&guild, msg) {
-        check_msg(msg.reply(ctx, "You are not in a voice channel >_<!").await);
-        return Ok(());
-    };
-
-    let manager = songbird::get(ctx)
-        .await
-        .expect("Songbird Voice client placed in at initialisation.")
-        .clone();
-
-    if check_bot_using_at_other_chan(&manager, &guild, msg).await {
-        return Ok(());
-    }
-
-    if let Some(handler_lock) = manager.get(guild_id) {
-        let handler = handler_lock.lock().await;
-        let queue = handler.queue();
-        queue.resume()?;
-    } else {
-        check_msg(msg.reply(ctx, "You are not in a voice channel").await);
-    }
-
-    Ok(())
-}
-
-#[command]
-#[only_in(guilds)]
 async fn stop(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     let guild = msg.guild(&ctx.cache).await.unwrap();
     let guild_id = guild.id;
@@ -674,7 +643,7 @@ async fn stop(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
 
         let handler = handler_lock.lock().await;
         let queue = handler.queue();
-        queue.stop()?;
+        queue.stop();
 
         check_msg(
             msg.channel_id
