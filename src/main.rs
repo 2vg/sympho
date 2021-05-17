@@ -80,7 +80,7 @@ struct TrackStartNotifier {
 impl VoiceEventHandler for TrackStartNotifier {
     async fn act(&self, ctx: &EventContext<'_>) -> Option<Event> {
         if let EventContext::Track(&[(_state, track)]) = ctx {
-            let _ = track.set_volume(unsafe { *GLOBAL_VOLUME.get().unwrap().lock().unwrap() });
+            track.set_volume(unsafe { *GLOBAL_VOLUME.get().unwrap().lock().unwrap() });
         }
 
         None
@@ -199,8 +199,6 @@ async fn join(ctx: &Context, msg: &Message) -> CommandResult {
         let send_http = ctx.http.clone();
 
         let mut handle = handle_lock.lock().await;
-        let queue = handle.queue();
-        let _ = queue.pause();
 
         handle.add_global_event(
             Event::Track(TrackEvent::Play),
@@ -273,7 +271,7 @@ async fn leave(ctx: &Context, msg: &Message) -> CommandResult {
     let has_handler = manager.get(guild_id).is_some();
 
     if has_handler {
-        let _ = manager.remove(guild_id).await;
+        manager.remove(guild_id).await?;
 
         if let Some(handler_lock) = manager.get(guild_id) {
             unsafe {
@@ -284,7 +282,7 @@ async fn leave(ctx: &Context, msg: &Message) -> CommandResult {
 
             let handler = handler_lock.lock().await;
             let queue = handler.queue();
-            let _ = queue.stop();
+            queue.stop()?;
         };
     }
 
@@ -517,7 +515,7 @@ async fn skip(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     if let Some(handler_lock) = manager.get(guild_id) {
         let mut handler = handler_lock.lock().await;
         let queue = handler.queue();
-        let _ = queue.skip();
+        queue.skip()?;
 
         let url = unsafe {
             let q = GLOBAL_QUEUE.get().unwrap();
@@ -577,7 +575,7 @@ async fn pause(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     if let Some(handler_lock) = manager.get(guild_id) {
         let handler = handler_lock.lock().await;
         let queue = handler.queue();
-        let _ = queue.pause();
+        queue.pause()?;
     } else {
         check_msg(msg.reply(ctx, "You are not in a voice channel").await);
     }
@@ -608,7 +606,38 @@ async fn resume(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     if let Some(handler_lock) = manager.get(guild_id) {
         let handler = handler_lock.lock().await;
         let queue = handler.queue();
-        let _ = queue.resume();
+        queue.resume()?;
+    } else {
+        check_msg(msg.reply(ctx, "You are not in a voice channel").await);
+    }
+
+    Ok(())
+}
+
+#[command]
+#[only_in(guilds)]
+async fn enable_loop(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
+    let guild = msg.guild(&ctx.cache).await.unwrap();
+    let guild_id = guild.id;
+
+    if !check_user_can_use_command(&guild, msg) {
+        check_msg(msg.reply(ctx, "You are not in a voice channel >_<!").await);
+        return Ok(());
+    };
+
+    let manager = songbird::get(ctx)
+        .await
+        .expect("Songbird Voice client placed in at initialisation.")
+        .clone();
+
+    if check_bot_using_at_other_chan(&manager, &guild, msg).await {
+        return Ok(());
+    }
+
+    if let Some(handler_lock) = manager.get(guild_id) {
+        let handler = handler_lock.lock().await;
+        let queue = handler.queue();
+        queue.resume()?;
     } else {
         check_msg(msg.reply(ctx, "You are not in a voice channel").await);
     }
@@ -645,7 +674,7 @@ async fn stop(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
 
         let handler = handler_lock.lock().await;
         let queue = handler.queue();
-        let _ = queue.stop();
+        queue.stop()?;
 
         check_msg(
             msg.channel_id
