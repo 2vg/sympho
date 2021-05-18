@@ -48,6 +48,7 @@ made by uru(ururu#5687)
 !join: Join the VC channel with the user who called !join
 !leave: leave from the current channel
 !play <youtube, soundcloud url>: play music. supported single video, and playlist
+!loop <on or off>: enable/disable loop the current playing song
 !current: shows the title of the music currently playing
 !volume <1 - 100>: set the music volume
 !skip: skip the music currently playing
@@ -67,13 +68,15 @@ impl EventHandler for Handler {
 }
 
 #[group]
-#[commands(join, leave, play, current, volume, skip, pause, resume, stop, help)]
+#[commands(
+    join, leave, play, current, volume, skip, pause, resume, stop, looping, help
+)]
 struct General;
 
 // event
 struct TrackStartNotifier {
     // chan_id: ChannelId,
-    // http: Arc<Http>,
+// http: Arc<Http>,
 }
 
 #[async_trait]
@@ -177,12 +180,11 @@ async fn join(ctx: &Context, msg: &Message) -> CommandResult {
 
     if check_bot_using_at_other_chan(&manager, &guild, &msg).await {
         check_msg(
-            msg.channel_id
-                .say(
-                    &ctx.http,
-                    &format!("The bot is currently playing at {}", connect_to.mention()),
-                )
-                .await,
+            msg.reply(
+                &ctx.http,
+                &format!("The bot is currently playing at {}", connect_to.mention()),
+            )
+            .await,
         );
 
         return Ok(());
@@ -220,11 +222,7 @@ async fn join(ctx: &Context, msg: &Message) -> CommandResult {
                 .await,
         );
     } else {
-        check_msg(
-            msg.channel_id
-                .say(&ctx.http, "Error joining the channel")
-                .await,
-        );
+        check_msg(msg.reply(&ctx.http, "Error joining the channel.").await);
     }
 
     Ok(())
@@ -254,12 +252,11 @@ async fn leave(ctx: &Context, msg: &Message) -> CommandResult {
 
     if check_bot_using_at_other_chan(&manager, &guild, msg).await {
         check_msg(
-            msg.channel_id
-                .say(
-                    &ctx.http,
-                    &format!("The bot is currently playing at {}", connect_to.mention()),
-                )
-                .await,
+            msg.reply(
+                &ctx.http,
+                &format!("The bot is currently playing at {}", connect_to.mention()),
+            )
+            .await,
         );
 
         return Ok(());
@@ -288,7 +285,7 @@ async fn leave(ctx: &Context, msg: &Message) -> CommandResult {
 
 #[command]
 async fn help(ctx: &Context, msg: &Message) -> CommandResult {
-    check_msg(msg.channel_id.say(&ctx.http, HELP_TEXT).await);
+    check_msg(msg.reply(&ctx.http, HELP_TEXT).await);
 
     Ok(())
 }
@@ -303,12 +300,11 @@ async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
             (&msg).attachments[0].url.clone()
         } else {
             check_msg(
-                msg.channel_id
-                    .say(
-                        &ctx.http,
-                        "Must provide a URL to a video or audio, or attachments",
-                    )
-                    .await,
+                msg.reply(
+                    &ctx.http,
+                    "Must provide a URL to a video or audio, or attachments",
+                )
+                .await,
             );
 
             return Ok(());
@@ -367,8 +363,7 @@ async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         play_from_source(&mut handler, source.into());
 
         check_msg(
-            msg.channel_id
-                .say(&ctx.http, format!("Added {} song to queue :3", len))
+            msg.reply(&ctx.http, format!("Added {} song to queue.", len))
                 .await,
         );
     } else {
@@ -407,20 +402,15 @@ async fn current(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
             Some(song) => {
                 if let Some(title) = &song.metadata().title {
                     check_msg(
-                        msg.channel_id
-                            .say(&ctx.http, format!("Current track: {}", title))
+                        msg.reply(&ctx.http, format!("Current track: {}", title))
                             .await,
                     );
                 } else {
-                    check_msg(
-                        msg.channel_id
-                            .say(&ctx.http, "Current track have no title.")
-                            .await,
-                    );
+                    check_msg(msg.reply(&ctx.http, "Current track have no title.").await);
                 }
             }
             None => {
-                check_msg(msg.channel_id.say(&ctx.http, "No songs.").await);
+                check_msg(msg.reply(&ctx.http, "No songs.").await);
             }
         };
     } else {
@@ -537,11 +527,7 @@ async fn skip(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
 
         play_from_source(&mut handler, source.into());
 
-        check_msg(
-            msg.channel_id
-                .say(&ctx.http, format!("Song skipped."))
-                .await,
-        );
+        check_msg(msg.reply(&ctx.http, format!("Song skipped.")).await);
     } else {
         check_msg(msg.reply(ctx, "You are not in a voice channel").await);
     }
@@ -612,6 +598,62 @@ async fn resume(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
 }
 
 #[command]
+#[aliases("loop")]
+#[only_in(guilds)]
+async fn looping(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
+    let looping = if let Ok(arg) = args.single::<String>() {
+        if arg != "on" && arg != "off" {
+            return Ok(());
+        };
+        arg
+    } else {
+        return Ok(());
+    };
+
+    let guild = msg.guild(&ctx.cache).await.unwrap();
+    let guild_id = guild.id;
+
+    if !check_user_can_use_command(&guild, msg) {
+        check_msg(msg.reply(ctx, "You are not in a voice channel >_<!").await);
+        return Ok(());
+    };
+
+    let manager = songbird::get(ctx)
+        .await
+        .expect("Songbird Voice client placed in at initialisation.")
+        .clone();
+
+    if check_bot_using_at_other_chan(&manager, &guild, msg).await {
+        return Ok(());
+    }
+
+    if let Some(handler_lock) = manager.get(guild_id) {
+        let handler = handler_lock.lock().await;
+        if let Some(current) = handler.queue().current() {
+            if looping == "on" {
+                if let Ok(_) = current.enable_loop() {
+                    check_msg(
+                        msg.reply(ctx, "Enabled loop the current playing song,")
+                            .await,
+                    );
+                }
+            } else {
+                if let Ok(_) = current.disable_loop() {
+                    check_msg(
+                        msg.reply(ctx, "Disabled loop the current playing song,")
+                            .await,
+                    );
+                }
+            }
+        }
+    } else {
+        check_msg(msg.reply(ctx, "You are not in a voice channel").await);
+    }
+
+    Ok(())
+}
+
+#[command]
 #[only_in(guilds)]
 async fn stop(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     let guild = msg.guild(&ctx.cache).await.unwrap();
@@ -642,11 +684,7 @@ async fn stop(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
         let queue = handler.queue();
         queue.stop();
 
-        check_msg(
-            msg.channel_id
-                .say(&ctx.http, "stopped, queue was cleared :3")
-                .await,
-        );
+        check_msg(msg.reply(&ctx.http, "Stopped, queue was cleared.").await);
     } else {
         check_msg(msg.reply(ctx, "You are not in a voice channel").await);
     }
