@@ -364,7 +364,7 @@ async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
                 .await,
         );
     } else {
-        check_msg(msg.reply(ctx, "You are not in a voice channel").await);
+        check_msg(msg.reply(ctx, "The bot is not in a voice channel. >_<!").await);
     }
 
     Ok(())
@@ -410,7 +410,7 @@ async fn current(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
             }
         };
     } else {
-        check_msg(msg.reply(ctx, "You are not in a voice channel").await);
+        check_msg(msg.reply(ctx, "The bot is not in a voice channel. >_<!").await);
     }
 
     Ok(())
@@ -468,7 +468,7 @@ async fn volume(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
             None => {}
         };
     } else {
-        check_msg(msg.reply(ctx, "You are not in a voice channel").await);
+        check_msg(msg.reply(ctx, "The bot is not in a voice channel. >_<!").await);
     }
 
     Ok(())
@@ -523,7 +523,7 @@ async fn skip(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
 
         check_msg(msg.reply(&ctx.http, format!("Song skipped.")).await);
     } else {
-        check_msg(msg.reply(ctx, "You are not in a voice channel").await);
+        check_msg(msg.reply(ctx, "The bot is not in a voice channel. >_<!").await);
     }
 
     Ok(())
@@ -553,7 +553,7 @@ async fn pause(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
         let queue = handler.queue();
         queue.pause()?;
     } else {
-        check_msg(msg.reply(ctx, "You are not in a voice channel").await);
+        check_msg(msg.reply(ctx, "The bot is not in a voice channel. >_<!").await);
     }
 
     Ok(())
@@ -583,7 +583,7 @@ async fn resume(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
         let queue = handler.queue();
         queue.resume()?;
     } else {
-        check_msg(msg.reply(ctx, "You are not in a voice channel").await);
+        check_msg(msg.reply(ctx, "The bot is not in a voice channel. >_<!").await);
     }
 
     Ok(())
@@ -638,7 +638,7 @@ async fn looping(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult 
             }
         }
     } else {
-        check_msg(msg.reply(ctx, "You are not in a voice channel").await);
+        check_msg(msg.reply(ctx, "The bot is not in a voice channel. >_<!").await);
     }
 
     Ok(())
@@ -676,7 +676,7 @@ async fn stop(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
 
         check_msg(msg.reply(&ctx.http, "Stopped, queue was cleared.").await);
     } else {
-        check_msg(msg.reply(ctx, "You are not in a voice channel").await);
+        check_msg(msg.reply(ctx, "The bot is not in a voice channel. >_<!").await);
     }
 
     Ok(())
@@ -764,7 +764,7 @@ async fn check_user_can_use_command(guild: &Guild, ctx: &Context, msg: &Message)
         return false;
     }
     if !in_channel(guild, msg) {
-        check_msg(msg.reply(ctx, "The bot is not in a voice channel.").await);
+        check_msg(msg.reply(ctx, "You are not in a voice channel. >_<!").await);
         return false;
     }
     true
