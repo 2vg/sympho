@@ -8,10 +8,14 @@ simple discord music bot for pse.
 clone, set token to `DISCORD_TOKEN` env var, then `cargo build`
 
 ## Usage
+if want to call bot, need role named "DJUser".</br>
+if want to get rid of this, look at the source code and remove the code call to `has_dj_user`.</br>
+
 ```
 !join: Join the VC channel with the user who called !join
 !leave: leave from the current channel
-!play <youtube url>: play music. supported single video, and playlist
+!play <youtube, soundcloud url>: play music. supported single video, and playlist
+!loop <on or off>: enable/disable loop the current playing song
 !current: shows the title of the music currently playing
 !volume <1 - 100>: set the music volume
 !skip: skip the music currently playing
