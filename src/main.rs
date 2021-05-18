@@ -162,8 +162,7 @@ async fn join(ctx: &Context, msg: &Message) -> CommandResult {
     let guild = msg.guild(&ctx.cache).await.unwrap();
     let guild_id = guild.id;
 
-    if !check_user_can_use_command(&guild, msg) {
-        check_msg(msg.reply(ctx, "You are not in a voice channel >_<!").await);
+    if !check_user_can_use_command(&guild, ctx, msg).await {
         return Ok(());
     };
 
@@ -234,8 +233,7 @@ async fn leave(ctx: &Context, msg: &Message) -> CommandResult {
     let guild = msg.guild(&ctx.cache).await.unwrap();
     let guild_id = guild.id;
 
-    if !check_user_can_use_command(&guild, msg) {
-        check_msg(msg.reply(ctx, "You are not in a voice channel >_<!").await);
+    if !check_user_can_use_command(&guild, ctx, msg).await {
         return Ok(());
     };
 
@@ -318,8 +316,7 @@ async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     let guild = msg.guild(&ctx.cache).await.unwrap();
     let guild_id = guild.id;
 
-    if !check_user_can_use_command(&guild, msg) {
-        check_msg(msg.reply(ctx, "You are not in a voice channel >_<!").await);
+    if !check_user_can_use_command(&guild, ctx, msg).await {
         return Ok(());
     };
 
@@ -379,8 +376,7 @@ async fn current(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     let guild = msg.guild(&ctx.cache).await.unwrap();
     let guild_id = guild.id;
 
-    if !check_user_can_use_command(&guild, msg) {
-        check_msg(msg.reply(ctx, "You are not in a voice channel >_<!").await);
+    if !check_user_can_use_command(&guild, ctx, msg).await {
         return Ok(());
     };
 
@@ -439,8 +435,7 @@ async fn volume(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     let guild = msg.guild(&ctx.cache).await.unwrap();
     let guild_id = guild.id;
 
-    if !check_user_can_use_command(&guild, msg) {
-        check_msg(msg.reply(ctx, "You are not in a voice channel >_<!").await);
+    if !check_user_can_use_command(&guild, ctx, msg).await {
         return Ok(());
     };
 
@@ -485,8 +480,7 @@ async fn skip(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     let guild = msg.guild(&ctx.cache).await.unwrap();
     let guild_id = guild.id;
 
-    if !check_user_can_use_command(&guild, msg) {
-        check_msg(msg.reply(ctx, "You are not in a voice channel >_<!").await);
+    if !check_user_can_use_command(&guild, ctx, msg).await {
         return Ok(());
     };
 
@@ -541,8 +535,7 @@ async fn pause(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     let guild = msg.guild(&ctx.cache).await.unwrap();
     let guild_id = guild.id;
 
-    if !check_user_can_use_command(&guild, msg) {
-        check_msg(msg.reply(ctx, "You are not in a voice channel >_<!").await);
+    if !check_user_can_use_command(&guild, ctx, msg).await {
         return Ok(());
     };
 
@@ -572,8 +565,7 @@ async fn resume(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     let guild = msg.guild(&ctx.cache).await.unwrap();
     let guild_id = guild.id;
 
-    if !check_user_can_use_command(&guild, msg) {
-        check_msg(msg.reply(ctx, "You are not in a voice channel >_<!").await);
+    if !check_user_can_use_command(&guild, ctx, msg).await {
         return Ok(());
     };
 
@@ -613,8 +605,7 @@ async fn looping(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult 
     let guild = msg.guild(&ctx.cache).await.unwrap();
     let guild_id = guild.id;
 
-    if !check_user_can_use_command(&guild, msg) {
-        check_msg(msg.reply(ctx, "You are not in a voice channel >_<!").await);
+    if !check_user_can_use_command(&guild, ctx, msg).await {
         return Ok(());
     };
 
@@ -659,8 +650,7 @@ async fn stop(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     let guild = msg.guild(&ctx.cache).await.unwrap();
     let guild_id = guild.id;
 
-    if !check_user_can_use_command(&guild, msg) {
-        check_msg(msg.reply(ctx, "You are not in a voice channel >_<!").await);
+    if !check_user_can_use_command(&guild, ctx, msg).await {
         return Ok(());
     };
 
@@ -768,8 +758,16 @@ fn in_channel(guild: &Guild, msg: &Message) -> bool {
     }
 }
 
-fn check_user_can_use_command(guild: &Guild, msg: &Message) -> bool {
-    return has_dj_user(guild, &msg.member.as_ref().unwrap().roles) && in_channel(guild, msg);
+async fn check_user_can_use_command(guild: &Guild, ctx: &Context, msg: &Message) -> bool {
+    if !has_dj_user(guild, &msg.member.as_ref().unwrap().roles) {
+        check_msg(msg.reply(ctx, "You don't have the role of `DJ User`. >_<!").await);
+        return false;
+    }
+    if !in_channel(guild, msg) {
+        check_msg(msg.reply(ctx, "The bot is not in a voice channel.").await);
+        return false;
+    }
+    true
 }
 
 // if bot playing music on other channel, return true.
