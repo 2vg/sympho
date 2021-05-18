@@ -1,11 +1,15 @@
 use std::{
+    collections::HashMap,
     env,
+    path::Path,
     sync::{
         atomic::{AtomicUsize, Ordering},
         Arc, Mutex,
     },
     time::Duration,
 };
+
+use humantime::format_duration;
 
 use once_cell::sync::OnceCell;
 
@@ -27,13 +31,9 @@ use serenity::{
     Result as SerenityResult,
 };
 
-use songbird::{
-    create_player,
-    input::{restartable::Restartable, Input},
-    tracks::PlayMode,
-    Call, Event, EventContext, EventHandler as VoiceEventHandler, SerenityInit, Songbird,
-    TrackEvent,
-};
+use songbird::{Call, Event, EventContext, EventHandler as VoiceEventHandler, SerenityInit, Songbird, TrackEvent, create_player, driver::{Config, CryptoMode, DecodeMode}, input::{restartable::Restartable, Input}, tracks::{PlayMode, TrackHandle}};
+
+use url::Url;
 
 use youtube_dl::{YoutubeDl, YoutubeDlOutput};
 
@@ -98,7 +98,7 @@ struct TrackEndNotifier {
 
 #[async_trait]
 impl VoiceEventHandler for TrackEndNotifier {
-    async fn act(&self, ctx: &EventContext<'_>) -> Option<Event> {
+    async fn act(&self, _ctx: &EventContext<'_>) -> Option<Event> {
         let url = unsafe {
             let q = GLOBAL_QUEUE.get().unwrap();
             let mut v = q.lock().unwrap();
@@ -112,9 +112,7 @@ impl VoiceEventHandler for TrackEndNotifier {
             }
         };
 
-        let source = if let Ok(source) = Restartable::ytdl(url.clone(), true).await {
-            source
-        } else if let Ok(source) = Restartable::ffmpeg(url.clone(), true).await {
+        let source = if let Ok(source) = get_source(url).await {
             source
         } else {
             return None;
@@ -146,7 +144,17 @@ async fn main() {
     let mut client = Client::builder(&token)
         .event_handler(Handler)
         .framework(framework)
-        .register_songbird()
+        .register_songbird_with({
+            let songbird = songbird::Songbird::serenity();
+
+            songbird.set_config(Config {
+                crypto_mode: CryptoMode::Normal,
+                decode_mode: DecodeMode::Pass,
+                preallocated_tracks: 2,
+            });
+
+            songbird
+        })
         .await
         .expect("Err creating client");
 
@@ -192,9 +200,9 @@ async fn join(ctx: &Context, msg: &Message) -> CommandResult {
     let (handle_lock, success) = manager.join(guild_id, connect_to).await;
 
     if let Ok(_channel) = success {
-        let chan_id = msg.channel_id;
+        // let chan_id = msg.channel_id;
 
-        let send_http = ctx.http.clone();
+        // let send_http = ctx.http.clone();
 
         let mut handle = handle_lock.lock().await;
 
@@ -309,7 +317,7 @@ async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         }
     };
 
-    if !url.starts_with("http") {
+    if Url::parse(&url).is_err() {
         return Ok(());
     }
 
@@ -349,9 +357,7 @@ async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
             }
         };
 
-        let source = if let Ok(source) = Restartable::ytdl(url.clone(), true).await {
-            source
-        } else if let Ok(source) = Restartable::ffmpeg(url.clone(), true).await {
+        let source = if let Ok(source) = get_source(url).await {
             source
         } else {
             return Ok(());
@@ -364,13 +370,17 @@ async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
                 .await,
         );
     } else {
-        check_msg(msg.reply(ctx, "The bot is not in a voice channel. >_<!").await);
+        check_msg(
+            msg.reply(ctx, "The bot is not in a voice channel. >_<!")
+                .await,
+        );
     }
 
     Ok(())
 }
 
 #[command]
+#[aliases("nowplaying")]
 #[only_in(guilds)]
 async fn current(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     let guild = msg.guild(&ctx.cache).await.unwrap();
@@ -391,26 +401,17 @@ async fn current(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
 
     if let Some(handler_lock) = manager.get(guild_id) {
         let handler = handler_lock.lock().await;
-        let queue = handler.queue();
-        let current = queue.current();
 
-        match current {
-            Some(song) => {
-                if let Some(title) = &song.metadata().title {
-                    check_msg(
-                        msg.reply(&ctx.http, format!("Current track: {}", title))
-                            .await,
-                    );
-                } else {
-                    check_msg(msg.reply(&ctx.http, "Current track have no title.").await);
-                }
-            }
-            None => {
-                check_msg(msg.reply(&ctx.http, "No songs.").await);
-            }
+        if let Some(track_handle) = handler.queue().current() {
+            say_track_with_embed(msg, ctx, &track_handle).await;
+        } else {
+            check_msg(msg.reply(&ctx.http, "No songs.").await);
         };
     } else {
-        check_msg(msg.reply(ctx, "The bot is not in a voice channel. >_<!").await);
+        check_msg(
+            msg.reply(ctx, "The bot is not in a voice channel. >_<!")
+                .await,
+        );
     }
 
     Ok(())
@@ -468,7 +469,10 @@ async fn volume(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
             None => {}
         };
     } else {
-        check_msg(msg.reply(ctx, "The bot is not in a voice channel. >_<!").await);
+        check_msg(
+            msg.reply(ctx, "The bot is not in a voice channel. >_<!")
+                .await,
+        );
     }
 
     Ok(())
@@ -511,9 +515,7 @@ async fn skip(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
             }
         };
 
-        let source = if let Ok(source) = Restartable::ytdl(url.clone(), true).await {
-            source
-        } else if let Ok(source) = Restartable::ffmpeg(url.clone(), true).await {
+        let source = if let Ok(source) = get_source(url).await {
             source
         } else {
             return Ok(());
@@ -523,7 +525,10 @@ async fn skip(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
 
         check_msg(msg.reply(&ctx.http, format!("Song skipped.")).await);
     } else {
-        check_msg(msg.reply(ctx, "The bot is not in a voice channel. >_<!").await);
+        check_msg(
+            msg.reply(ctx, "The bot is not in a voice channel. >_<!")
+                .await,
+        );
     }
 
     Ok(())
@@ -553,7 +558,10 @@ async fn pause(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
         let queue = handler.queue();
         queue.pause()?;
     } else {
-        check_msg(msg.reply(ctx, "The bot is not in a voice channel. >_<!").await);
+        check_msg(
+            msg.reply(ctx, "The bot is not in a voice channel. >_<!")
+                .await,
+        );
     }
 
     Ok(())
@@ -583,7 +591,10 @@ async fn resume(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
         let queue = handler.queue();
         queue.resume()?;
     } else {
-        check_msg(msg.reply(ctx, "The bot is not in a voice channel. >_<!").await);
+        check_msg(
+            msg.reply(ctx, "The bot is not in a voice channel. >_<!")
+                .await,
+        );
     }
 
     Ok(())
@@ -638,7 +649,10 @@ async fn looping(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult 
             }
         }
     } else {
-        check_msg(msg.reply(ctx, "The bot is not in a voice channel. >_<!").await);
+        check_msg(
+            msg.reply(ctx, "The bot is not in a voice channel. >_<!")
+                .await,
+        );
     }
 
     Ok(())
@@ -676,7 +690,10 @@ async fn stop(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
 
         check_msg(msg.reply(&ctx.http, "Stopped, queue was cleared.").await);
     } else {
-        check_msg(msg.reply(ctx, "The bot is not in a voice channel. >_<!").await);
+        check_msg(
+            msg.reply(ctx, "The bot is not in a voice channel. >_<!")
+                .await,
+        );
     }
 
     Ok(())
@@ -693,7 +710,29 @@ fn check_msg(result: SerenityResult<Message>) {
 }
 
 fn extract_yt(url: &str) -> Vec<String> {
-    let output = YoutubeDl::new(url)
+    let mut is_playlist = false;
+
+    let url = if let Ok(u) = Url::parse(url) {
+        if u.path() == "/playlist" {
+            is_playlist = true;
+        }
+        if u.path() == "/watch" && (&u).query_pairs().count() != 0 {
+            for q in (&u).query_pairs() {
+                if q.0 == "list" {
+                    is_playlist = true;
+                };
+            }
+        }
+        if is_playlist {
+            u.into_string()
+        } else {
+            return vec![u.into_string()];
+        }
+    } else {
+        return vec![];
+    };
+
+    let output = YoutubeDl::new(&url)
         .flat_playlist(true)
         .socket_timeout("3")
         .run();
@@ -721,6 +760,27 @@ fn extract_yt(url: &str) -> Vec<String> {
         };
     } else {
         return vec![url.to_string()];
+    }
+}
+
+fn is_file_url(url: &str) -> bool {
+    let url = Url::parse(url).unwrap();
+    Path::new(url.path()).extension().is_some()
+}
+
+async fn get_source(url: String) -> Result<Restartable, ()> {
+    if is_file_url(&url) {
+        if let Ok(source) = Restartable::ffmpeg(url.clone(), false).await {
+            Ok(source)
+        } else {
+            Err(())
+        }
+    } else {
+        if let Ok(source) = Restartable::ytdl(url.clone(), false).await {
+            Ok(source)
+        } else {
+            Err(())
+        }
     }
 }
 
@@ -760,7 +820,10 @@ fn in_channel(guild: &Guild, msg: &Message) -> bool {
 
 async fn check_user_can_use_command(guild: &Guild, ctx: &Context, msg: &Message) -> bool {
     if !has_dj_user(guild, &msg.member.as_ref().unwrap().roles) {
-        check_msg(msg.reply(ctx, "You don't have the role of `DJ User`. >_<!").await);
+        check_msg(
+            msg.reply(ctx, "You don't have the role of `DJ User`. >_<!")
+                .await,
+        );
         return false;
     }
     if !in_channel(guild, msg) {
@@ -797,4 +860,36 @@ async fn check_bot_using_at_other_chan(manager: &Songbird, guild: &Guild, msg: &
     };
 
     false
+}
+
+async fn say_track_with_embed(msg: &Message, ctx: &Context, track_handle: &TrackHandle) {
+    check_msg(
+        msg.channel_id
+            .send_message(&ctx.http, |m| {
+                m.content("_nowplaying ♪:_");
+                m.embed(|e| {
+                    e.title(track_handle.metadata().title.as_ref().unwrap_or(&"Unknown".to_string()));
+                    e.description(&format!("length: {}",
+                        if let Some(dur) = track_handle.metadata().duration {
+                            format_duration(dur).to_string()
+                        } else {
+                            "Unknown".to_string()
+                        }
+                    ));
+                    if let Some(url) = &track_handle.metadata().source_url {
+                        e.url(url);
+                    }
+                    if let Some(thumb_url) = &track_handle.metadata().thumbnail {
+                        if thumb_url.starts_with("https://") {
+                            e.thumbnail(thumb_url);
+                        }
+                    }
+
+                    e
+                });
+
+                m
+            })
+            .await,
+    );
 }
