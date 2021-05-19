@@ -880,7 +880,7 @@ async fn enqueue(ctx: &Context, key: u64, url: String) -> usize {
                                     Duration::new(0, 0)
                                 };
                                 sympho_data.queue.push(TrackSympho {
-                                    url: url.clone(),
+                                    url: format!("https://www.youtube.com/watch?v={}", url),
                                     title: sv.title,
                                     duration: dur,
                                 });
