@@ -1000,11 +1000,15 @@ fn in_channel(guild: &Guild, msg: &Message) -> bool {
 }
 
 async fn check_user_can_use_command(guild: &Guild, ctx: &Context, msg: &Message) -> bool {
-    if !has_dj_user(guild, &msg.member.as_ref().unwrap().roles) {
-        check_msg(
-            msg.reply(ctx, "You don't have the role of `DJ User`. >_<!")
-                .await,
-        );
+    if let Some(member) = &msg.member.as_ref() {
+        if !has_dj_user(guild, &member.roles) {
+            check_msg(
+                msg.reply(ctx, "You don't have the role of `DJUser`. >_<!")
+                    .await,
+            );
+            return false;
+        }
+    } else {
         return false;
     }
     if !in_channel(guild, msg) {
