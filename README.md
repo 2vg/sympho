@@ -2,7 +2,7 @@ Sympho
 ===
 
 simple discord music bot for my hobby.</br>
-symphp equipped with a unique queue system.</br>
+sympho equipped with a unique queue system.</br>
 
 ## build
 
@@ -17,7 +17,7 @@ if want to get rid of this, look at the source code and remove the code call to 
 
 - !play <youtube, soundcloud url> : play music. supported single video, and playlist
 - !loop <on or off> : enable/disable loop the current playing song
-- !volume <1 - 100> : set the music volume
+- !volume <0.1 - 100.0> : set the music volume
 - !queue <0 - ?> : Shows a list of songs in the queue. index is 0 first.
 
 - !join : Join the VC channel with the user who called !join
