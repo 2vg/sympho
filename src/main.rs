@@ -357,6 +357,8 @@ async fn leave(ctx: &Context, msg: &Message) -> CommandResult {
                 sympho_data.current = None;
             }
         }
+    } else {
+        check_msg(msg.reply(&ctx.http, "The bot is not in a voice channel. >_<!").await);
     }
 
     Ok(())
@@ -415,12 +417,14 @@ async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
 
         let len = enqueue(ctx, guild_id.0, url.clone()).await;
 
-        check_msg(
-            msg.reply(&ctx.http, format!("Added {} song to queue.", len))
-                .await,
-        );
+        if len != 0 {
+            check_msg(
+                msg.reply(&ctx.http, format!("Added {} song to queue.", len))
+                    .await,
+            );
 
-        dequeue(&mut handler, ctx, guild_id.0).await;
+            dequeue(&mut handler, ctx, guild_id.0).await;
+        }
     } else {
         check_msg(
             msg.reply(ctx, "The bot is not in a voice channel. >_<!")
