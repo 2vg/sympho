@@ -199,7 +199,7 @@ async fn main() {
     }
 
     let framework = StandardFramework::new()
-        .configure(|c| c.prefix("~"))
+        .configure(|c| c.prefix("!"))
         .group(&GENERAL_GROUP);
 
     let mut client = Client::builder(&token)
