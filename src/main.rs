@@ -374,6 +374,7 @@ async fn help(ctx: &Context, msg: &Message) -> CommandResult {
 }
 
 #[command]
+#[aliases("p")]
 #[only_in(guilds)]
 async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     let url = if let Ok(url) = args.single::<String>() {
