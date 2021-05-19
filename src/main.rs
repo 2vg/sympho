@@ -41,16 +41,17 @@ use tokio::sync::RwLock;
 use url::Url;
 use youtube_dl::{YoutubeDl, YoutubeDlOutput};
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct TrackSympho {
     url: String,
     title: String,
+    thumb: Option<String>,
     duration: Duration,
 }
 
 #[derive(Debug, Default)]
 struct SymphoData {
-    current: Option<TrackHandle>,
+    current: Option<(TrackHandle, TrackSympho)>,
     volume: f32,
     queue: Vec<TrackSympho>,
     queue_duration: Duration,
@@ -148,7 +149,10 @@ impl VoiceEventHandler for TrackEndNotifier {
             });
 
             if sympho_data.queue.len() != 0 {
-                let url = sympho_data.queue[0].url.clone();
+                let track_sympho = sympho_data.queue[0].clone();
+                let url = track_sympho.url.clone();
+
+                sympho_data.queue.remove(0);
 
                 let source = if let Ok(source) = get_source(url).await {
                     source
@@ -156,15 +160,13 @@ impl VoiceEventHandler for TrackEndNotifier {
                     return None;
                 };
 
-                sympho_data.queue_duration -= sympho_data.queue[0].duration;
+                sympho_data.queue_duration -= track_sympho.duration;
 
-                sympho_data.queue.remove(0);
-
-                sympho_data.current = Some(play_from_source(
+                sympho_data.current = Some((play_from_source(
                     &mut handler,
                     source.into(),
                     sympho_data.volume,
-                ));
+                ), track_sympho));
             } else {
                 sympho_data.current = None;
                 return None;
@@ -197,7 +199,7 @@ async fn main() {
     }
 
     let framework = StandardFramework::new()
-        .configure(|c| c.prefix("!"))
+        .configure(|c| c.prefix("~"))
         .group(&GENERAL_GROUP);
 
     let mut client = Client::builder(&token)
@@ -352,7 +354,7 @@ async fn leave(ctx: &Context, msg: &Message) -> CommandResult {
             sympho_data.queue = Vec::default();
             sympho_data.queue_duration = Duration::default();
 
-            if let Some(current) = &sympho_data.current {
+            if let Some((current, _)) = &sympho_data.current {
                 current.stop()?;
                 sympho_data.current = None;
             }
@@ -464,8 +466,8 @@ async fn current(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
                 ..Default::default()
             });
 
-            if let Some(track_handle) = &sympho_data.current {
-                say_track_with_embed(msg, ctx, track_handle).await;
+            if let Some((track_handle, track_sympho)) = &sympho_data.current {
+                say_track_with_embed(msg, ctx, track_handle, track_sympho).await;
             } else {
                 check_msg(msg.reply(&ctx.http, "No songs.").await);
             };
@@ -525,7 +527,7 @@ async fn volume(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
 
             sympho_data.volume = volume;
 
-            if let Some(current) = &sympho_data.current {
+            if let Some((current, _)) = &sympho_data.current {
                 current.set_volume(volume)?;
             }
         }
@@ -567,7 +569,7 @@ async fn skip(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
                 ..Default::default()
             });
 
-            if let Some(current) = &sympho_data.current {
+            if let Some((current, _)) = &sympho_data.current {
                 current.stop()?;
                 check_msg(msg.reply(&ctx.http, format!("Song skipped.")).await);
             }
@@ -610,7 +612,7 @@ async fn pause(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
                 ..Default::default()
             });
 
-            if let Some(current) = &sympho_data.current {
+            if let Some((current, _)) = &sympho_data.current {
                 current.pause()?;
             }
         }
@@ -652,7 +654,7 @@ async fn resume(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
                 ..Default::default()
             });
 
-            if let Some(current) = &sympho_data.current {
+            if let Some((current, _)) = &sympho_data.current {
                 current.play()?;
             }
         }
@@ -704,7 +706,7 @@ async fn looping(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult 
                 ..Default::default()
             });
 
-            if let Some(current) = &sympho_data.current {
+            if let Some((current, _)) = &sympho_data.current {
                 if looping == "on" {
                     if let Ok(_) = current.enable_loop() {
                         check_msg(
@@ -763,7 +765,7 @@ async fn stop(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
             sympho_data.queue = Vec::default();
             sympho_data.queue_duration = Duration::default();
 
-            if let Some(current) = &sympho_data.current {
+            if let Some((current, _)) = &sympho_data.current {
                 current.stop()?;
                 sympho_data.current = None;
             }
@@ -860,6 +862,7 @@ async fn enqueue(ctx: &Context, key: u64, url: String) -> usize {
             sympho_data.queue.push(TrackSympho {
                 url: url.clone(),
                 title: "Unknown".to_string(),
+                thumb: None,
                 duration: dur,
             });
             sympho_data.queue_duration += dur;
@@ -886,6 +889,7 @@ async fn enqueue(ctx: &Context, key: u64, url: String) -> usize {
                                 sympho_data.queue.push(TrackSympho {
                                     url: format!("https://www.youtube.com/watch?v={}", url),
                                     title: sv.title,
+                                    thumb: sv.thumbnail,
                                     duration: dur,
                                 });
                                 sympho_data.queue_duration += dur;
@@ -905,6 +909,7 @@ async fn enqueue(ctx: &Context, key: u64, url: String) -> usize {
                             sympho_data.queue.push(TrackSympho {
                                 url: url.clone(),
                                 title: yt_sv.title,
+                                thumb: yt_sv.thumbnail,
                                 duration: dur,
                             });
                             sympho_data.queue_duration += dur;
@@ -920,7 +925,7 @@ async fn enqueue(ctx: &Context, key: u64, url: String) -> usize {
 }
 
 async fn dequeue(handler: &mut Call, ctx: &Context, key: u64) {
-    let data = ctx.data.write().await;
+    let data = ctx.data.read().await;
     if let Some(sympho_global_mutex) = data.get::<SymphoGlobal>() {
         let mut sympho_global = sympho_global_mutex.write().await;
         let sympho_data = sympho_global.entry(key).or_insert(SymphoData {
@@ -932,7 +937,10 @@ async fn dequeue(handler: &mut Call, ctx: &Context, key: u64) {
             return;
         }
 
-        let url = sympho_data.queue[0].url.clone();
+        let track_sympho = sympho_data.queue[0].clone();
+        let url = track_sympho.url.clone();
+
+        sympho_data.queue.remove(0);
 
         let source = if let Ok(source) = get_source(url).await {
             source
@@ -940,11 +948,9 @@ async fn dequeue(handler: &mut Call, ctx: &Context, key: u64) {
             return;
         };
 
-        sympho_data.queue_duration -= sympho_data.queue[0].duration;
+        sympho_data.queue_duration -= track_sympho.duration;
 
-        sympho_data.queue.remove(0);
-
-        sympho_data.current = Some(play_from_source(handler, source.into(), sympho_data.volume));
+        sympho_data.current = Some((play_from_source(handler, source.into(), sympho_data.volume), track_sympho));
     }
 }
 
@@ -1051,7 +1057,7 @@ async fn check_bot_using_at_other_chan(manager: &Songbird, guild: &Guild, msg: &
     false
 }
 
-async fn say_track_with_embed(msg: &Message, ctx: &Context, track_handle: &TrackHandle) {
+async fn say_track_with_embed(msg: &Message, ctx: &Context, track_handle: &TrackHandle, _track_sympho: &TrackSympho) {
     check_msg(
         msg.channel_id
             .send_message(&ctx.http, |m| {
