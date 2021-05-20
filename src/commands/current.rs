@@ -63,6 +63,12 @@ async fn say_track_with_embed(
     track_handle: &TrackHandle,
     _track_sympho: &TrackSympho,
 ) {
+    let track_current_position = if let Ok(info) = track_handle.get_info().await {
+        dur_to_hhmmss((*info).position)
+    } else {
+        "Unknown".to_string()
+    };
+
     check_msg(
         msg.channel_id
             .send_message(&ctx.http, |m| {
@@ -100,9 +106,10 @@ async fn say_track_with_embed(
                             .unwrap_or(&"Unknown".to_string()),
                     );
                     e.description(&format!(
-                        "length: {}",
+                        "{} / {}",
+                        track_current_position,
                         if let Some(dur) = track_handle.metadata().duration {
-                            format_duration(dur).to_string()
+                            dur_to_hhmmss(dur)
                         } else {
                             "Unknown".to_string()
                         }

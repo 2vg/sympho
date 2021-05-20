@@ -179,3 +179,12 @@ pub async fn check_bot_using_at_other_chan(
 
     false
 }
+
+pub fn dur_to_hhmmss(dur: Duration) -> String {
+    let secs = dur.as_secs();
+    let seconds = secs % 60;
+    let minutes = (secs / 60) % 60;
+    let hours = (secs / 60) / 60;
+    
+    format!("{:02}:{:02}:{:02}", hours, minutes, seconds)
+}
