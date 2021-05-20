@@ -28,7 +28,7 @@ async fn before(ctx: &Context, msg: &Message, command_name: &str) -> bool {
         return false;
     };
 
-    if check_bot_using_at_other_chan(&manager, &guild, msg).await {
+    if check_bot_using_at_other_chan(&manager, &guild, msg, ctx).await {
         match command_name {
             "join" => {
                 let connect_to = if let Some(c) = guild

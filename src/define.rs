@@ -142,6 +142,7 @@ pub async fn check_bot_using_at_other_chan(
     manager: &Songbird,
     guild: &Guild,
     msg: &Message,
+    ctx: &Context
 ) -> bool {
     if let Some(channel_id) = guild
         .voice_states
@@ -156,12 +157,21 @@ pub async fn check_bot_using_at_other_chan(
                     return false;
                 }
 
-                if let Some(current) = handler.queue().current() {
-                    if let Ok(info) = current.get_info().await {
-                        if info.playing == PlayMode::Play {
-                            return true;
+                let data = ctx.data.read().await;
+                if let Some(sympho_global_mutex) = data.get::<SymphoGlobal>() {
+                    let mut sympho_global = sympho_global_mutex.write().await;
+                    let sympho_data = sympho_global.entry(guild.id.0).or_insert(SymphoData {
+                        volume: 1.0,
+                        ..Default::default()
+                    });
+
+                    if let Some((track_handle, _track_sympho)) = &sympho_data.current {
+                        if let Ok(info) = track_handle.get_info().await {
+                            if info.playing == PlayMode::Play {
+                                return true;
+                            }
                         }
-                    }
+                    };
                 }
             }
         }
