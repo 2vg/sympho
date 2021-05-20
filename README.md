@@ -15,6 +15,8 @@ if want to get rid of this, look at the source code and remove the code call to 
 ```markdown
 # made by uru(ururu#5687)
 
+- !help : THIS
+
 - !play <youtube, soundcloud url> : play music. supported single video, and playlist
 - !loop <on or off> : enable/disable loop the current playing song
 - !volume <0.1 - 100.0> : set the music volume
@@ -29,7 +31,7 @@ if want to get rid of this, look at the source code and remove the code call to 
 - !stop : stop to the music currently playing(if there) and queue will be empty
 ```
 
-## TODO
+## ~~TODO~~(done)
 
 -[x]: ファイル分けたので綺麗になった(主観) ~~Songbirdの例から派生したので、コードを綺麗にする~~
 
