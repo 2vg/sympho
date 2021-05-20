@@ -14,6 +14,7 @@ youtube_dl = "0.6.1"
 once_cell = "1.7.2"
 url = "2.2.1"
 humantime = "2.1.0"
+const_env = "0.1.2"
 
 [dependencies.serenity]
 version = "0.10.5"

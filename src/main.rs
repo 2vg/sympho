@@ -72,18 +72,22 @@ async fn main() {
     if let Ok(bot_info) = http.get_current_application_info().await {
         unsafe {
             SYMPHO_ICON.get_or_init(|| {
-                Mutex::new(format!(
-                    "https://cdn.discordapp.com/avatars/{}/{}.png",
-                    bot_info.id.0,
-                    bot_info.icon.clone().unwrap_or("0".to_string()).clone()
-                ))
+                if let Some(icon_url) = bot_info.icon.clone() {
+                    Mutex::new(format!(
+                        "https://cdn.discordapp.com/app-icons/{}/{}.png",
+                        bot_info.id.0,
+                        icon_url
+                    ))
+                } else {
+                    Mutex::new("https://cdn.discordapp.com/embed/avatars/0.png".to_string())
+                }
             });
             SYMPHO_NAME.get_or_init(|| Mutex::new(bot_info.name.clone()));
         }
     }
 
     let framework = StandardFramework::new()
-        .configure(|c| c.prefix(PREFIX))
+        .configure(|c| c.prefix(SYMPHO_PREFIX))
         .group(&GENERAL_GROUP);
 
     let mut client = Client::builder(&token)

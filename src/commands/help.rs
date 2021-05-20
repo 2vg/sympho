@@ -52,7 +52,7 @@ async fn say_help_with_embed(msg: &Message, ctx: &Context, cmd_name: &str) {
                                 a.url("https://github.com/2vg/sympho");
                                 a
                             });
-                            e.title(format!("{}{}", PREFIX, cmd_name));
+                            e.title(format!("{}{}", SYMPHO_PREFIX, cmd_name));
                             e.description(cmd.options.desc.unwrap_or("description is empty"));
                             if cmd.options.names.len() > 1 {
                                 e.field(
@@ -61,7 +61,7 @@ async fn say_help_with_embed(msg: &Message, ctx: &Context, cmd_name: &str) {
                                         .names
                                         .iter()
                                         .skip(1)
-                                        .map(|s| format!("{}{}", PREFIX, s))
+                                        .map(|s| format!("{}{}", SYMPHO_PREFIX, s))
                                         .collect::<Vec<_>>()
                                         .join("\n"),
                                     false,
@@ -84,7 +84,7 @@ async fn say_help_list_with_embed(msg: &Message, ctx: &Context) {
         .commands
         .iter()
         .fold(String::new(), |mut str, cmd| {
-            str += &format!("{}{}\n", PREFIX, cmd.options.names[0]);
+            str += &format!("{}{}\n", SYMPHO_PREFIX, cmd.options.names[0]);
             str
         });
 

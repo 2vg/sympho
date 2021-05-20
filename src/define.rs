@@ -1,8 +1,10 @@
+use const_env::from_env;
 use crate::commands::*;
 use crate::import::*;
 
 // Global const
-pub const PREFIX: &'static str = "!";
+#[from_env("SYMPHO_PREFIX")]
+pub const SYMPHO_PREFIX: &'static str = "!";
 
 // Global var
 pub static mut SYMPHO_ICON: OnceCell<Mutex<String>> = OnceCell::new();

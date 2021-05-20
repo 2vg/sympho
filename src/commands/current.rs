@@ -118,9 +118,7 @@ async fn say_track_with_embed(
                         e.url(url);
                     }
                     if let Some(thumb_url) = &track_handle.metadata().thumbnail {
-                        if thumb_url.starts_with("https://") {
-                            e.thumbnail(thumb_url);
-                        }
+                        e.thumbnail(thumb_url);
                     }
 
                     e

@@ -10,7 +10,7 @@ simple discord music bot for my hobby.</br>
 - play all from playlist
 - no using songbird's builtin-queue, sympho have unique queue system
 - Restrictions on command use based on role name(on default, sympho will check user have role that name called `DJUser`). you can remove it from the code if dont need it
-- enough commands(default prefix is `!`)
+- enough commands(default prefix is `!`, u can change define env `SYMPHO_PREFIX`)
     - `help Option<command name>` :</br>Show the command list, or if set command name on arg, show the command description.
 
     - `join` :</br>Join the VC channel with the user who called join command.(and if bot not playing the music on other channel)
