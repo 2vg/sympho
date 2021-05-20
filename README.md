@@ -31,9 +31,11 @@ if want to get rid of this, look at the source code and remove the code call to 
 
 ## TODO
 
-- [ ]: Songbirdの例から派生したので、コードを綺麗にする
-- [ ]: `unwrap`は邪悪なので、コードから消し飛ばす。(今のところバレてないけど、`Sympho`をクラッシュさせるコマンドのやり方が存在してしまっているので)
-- [x]: 対応した。 ~~`builtin-queue`に頼らず、`Sympho`自身の`queue`を持つコードに変更。
+-[x]: ファイル分けたので綺麗になった(主観) ~~Songbirdの例から派生したので、コードを綺麗にする~~
+
+-[x]: `unwrap()`は`Sympho`から消滅したぜ... ~~`unwrap`は邪悪なので、コードから消し飛ばす。(今のところバレてないけど、`Sympho`をクラッシュさせるコマンドのやり方が存在してしまっているので)~~
+
+-[x]: 対応した。 ~~`builtin-queue`に頼らず、`Sympho`自身の`queue`を持つコードに変更。
 現状`Sympho`はソースを一つのみしか再生しないので、`builtin-queue`はここでは適さないため。
 ssを再生する機能は時間があったら作るが、順番に再生ではなくミキシングにしないといけないので、結局`builtin-queue`は要らない。
 `Track`は`skip`される可能性があるので、例えばPlaylistを投げた時にすべての動画に対して`Track`オブジェクトを作るのはナンセンスな気がする。
