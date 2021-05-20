@@ -2,7 +2,7 @@ use crate::commands::*;
 use crate::import::*;
 
 // Global const
-pub const PREFIX: &'static str = "-";
+pub const PREFIX: &'static str = "!";
 
 // Global var
 pub static mut SYMPHO_ICON: OnceCell<Mutex<String>> = OnceCell::new();
