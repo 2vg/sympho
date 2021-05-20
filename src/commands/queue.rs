@@ -4,7 +4,7 @@ use crate::import::*;
 #[command]
 #[aliases("q")]
 #[only_in(guilds)]
-#[description("Shows a list of songs in the queue. index is 0 first. \nusage: <PREFIX>queue 0")]
+#[description("Shows a list of songs in the queue. index is 0 first.\nusage: <PREFIX>queue 0")]
 async fn queue(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     let start_queue_index = if let Ok(arg) = args.single::<usize>() {
         arg
