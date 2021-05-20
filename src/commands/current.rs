@@ -2,7 +2,7 @@ use crate::define::*;
 use crate::import::*;
 
 #[command]
-#[aliases("np, nowplaying, なうぷれ")]
+#[aliases("np", "nowplaying", "なうぷれ")]
 #[only_in(guilds)]
 #[description("Shows the info of the music currently playing.")]
 async fn current(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
