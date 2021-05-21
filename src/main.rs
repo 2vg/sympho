@@ -97,9 +97,9 @@ async fn main() {
             let songbird = songbird::Songbird::serenity();
 
             songbird.set_config(Config {
-                crypto_mode: CryptoMode::Normal,
+                crypto_mode: CryptoMode::Lite,
                 decode_mode: DecodeMode::Pass,
-                preallocated_tracks: 2,
+                preallocated_tracks: 1,
             });
 
             songbird

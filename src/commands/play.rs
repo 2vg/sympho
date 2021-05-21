@@ -180,7 +180,7 @@ pub async fn dequeue(handler: &mut Call, ctx: &Context, key: u64) {
         sympho_data.queue_duration -= track_sympho.duration;
 
         sympho_data.current = Some((
-            play_from_source(handler, source.into(), sympho_data.volume),
+            play_from_source(handler, source, sympho_data.volume),
             track_sympho,
         ));
     }

@@ -1,4 +1,5 @@
 pub use {
+    const_env::from_env,
     humantime::format_duration,
     once_cell::sync::OnceCell,
     serenity::{
@@ -26,7 +27,7 @@ pub use {
     songbird::{
         create_player,
         driver::{Config, CryptoMode, DecodeMode},
-        input::{restartable::Restartable, Input},
+        input::{Codec, restartable::Restartable, Input},
         tracks::{PlayMode, TrackHandle},
         Call, Event, EventContext, EventHandler as VoiceEventHandler, SerenityInit, Songbird,
         TrackEvent,

@@ -70,7 +70,7 @@ impl VoiceEventHandler for TrackEndNotifier {
                 sympho_data.queue_duration -= track_sympho.duration;
 
                 sympho_data.current = Some((
-                    play_from_source(&mut handler, source.into(), sympho_data.volume),
+                    play_from_source(&mut handler, source, sympho_data.volume),
                     track_sympho,
                 ));
             } else {

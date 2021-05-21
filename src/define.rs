@@ -1,6 +1,5 @@
 use crate::commands::*;
 use crate::import::*;
-use const_env::from_env;
 
 // Global const
 #[from_env("SYMPHO_PREFIX")]
@@ -70,15 +69,23 @@ pub fn is_file_url(url: &str) -> bool {
     Path::new(url.path()).extension().is_some()
 }
 
-pub async fn get_source(url: String) -> Result<Restartable, ()> {
+pub async fn get_source(url: String) -> Result<Input, ()> {
     if is_file_url(&url) {
         if let Ok(source) = Restartable::ffmpeg(url.clone(), true).await {
+            let mut source = Input::from(source);
+            if let Codec::Opus(ref mut opus) = source.kind {
+                opus.allow_passthrough = false;
+            }
             Ok(source)
         } else {
             Err(())
         }
     } else {
         if let Ok(source) = Restartable::ytdl(url.clone(), true).await {
+            let mut source = Input::from(source);
+            if let Codec::Opus(ref mut opus) = source.kind {
+                opus.allow_passthrough = false;
+            }
             Ok(source)
         } else {
             Err(())
