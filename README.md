@@ -10,7 +10,10 @@ simple discord music bot for my hobby.</br>
 - play all from playlist
 - no using songbird's builtin-queue, sympho have unique queue system
 - Restrictions on command use based on role name(on default, sympho will check user have role that name called `DJUser`). you can remove it from the code if dont need it
-- enough commands(default prefix is `!`, u can change define env `SYMPHO_PREFIX`)
+- enough commands(default prefix is `!`, u can change define env `SYMPHO_PREFIX`)</br>
+  <details>
+    <summary>command list (click to expand/collapse)</summary>
+
     - `help Option<command name>` :</br>Show the command list, or if set command name on arg, show the command description.
 
     - `join` :</br>Join the VC channel with the user who called join command.(and if bot not playing the music on other channel)
@@ -29,11 +32,28 @@ simple discord music bot for my hobby.</br>
 
     - `skip` :</br>Skip the music currently playing.
 
-    - `loop <on/off>` :</br>Enable/Disable loop the current playing song.\nusage: <PREFIX>loop on
+    - `loop <on/off>` :</br>Enable/Disable loop the current playing song.
 
     - `current` :</br>Shows the info of the music currently playing.
 
     - `queue` :</br>Shows a list of songs in the queue. index is 0 first.
+  </details>
+
+## Advantages over other bots
+
+- All written in Rust
+- Completely open source, and Easy to build (just set `DISCORD_TOKEN` env then run `cargo run`)
+- Depends on youtube-dl, but not limited to Youtube or Soundcloud URLs(For example, sympho also accept bilibili videos)
+- There are no premier restrictions like Rythm bot etc.
+- The code isn't too dirty, so anyone can customize it as like, for self-host
+
+## Dis-Advantages over other bots
+
+- Missing commands
+- Self-hosting costs
+- Difficult to customize for people who can't Rust
+- There is no such thing as an effect function for song
+- The audio area is still unstable(there is a problem with the sound being played, or the sound at the start of playback is a little strange.)
 
 ## Require
 
@@ -50,15 +70,9 @@ tested on Windows10 x64 and Ubuntu 20.04 with rust nightly 1.53 ~ 1.54
 
 clone, set token to `DISCORD_TOKEN` env var, then `cargo build`, then run it.
 
-## ~~TODO~~(Done)
+## TODO
 
-- [x] ファイル分けたので綺麗になった(主観) ~~Songbirdの例から派生したので、コードを綺麗にする~~
-
-- [x] `unwrap()`は`Sympho`から消滅したぜ... ~~`unwrap`は邪悪なので、コードから消し飛ばす。(今のところバレてないけど、`Sympho`をクラッシュさせるコマンドのやり方が存在してしまっているので)~~
-
-- [x] 対応した。 ~~`builtin-queue`に頼らず、`Sympho`自身の`queue`を持つコードに変更。
-現状`Sympho`はソースを一つのみしか再生しないので、`builtin-queue`はここでは適さないため。
-ssを再生する機能は時間があったら作るが、順番に再生ではなくミキシングにしないといけないので、結局`builtin-queue`は要らない。
-`Track`は`skip`される可能性があるので、例えばPlaylistを投げた時にすべての動画に対して`Track`オブジェクトを作るのはナンセンスな気がする。
-なので、`Sympho`では`Track`の`play`、 `skip`、と再生の終わりの後の次の曲がある時、に`queue`に入れるので、その時にのみ`Track`オブジェクトが作成される。
-`builtin-queue`を使った理由はこれだけの機能でBotコードが700行くらいになるとは思わず、`Sympho`自身の`queue`を自分で作るのが面倒だったため。~~
+- [ ] add more command(e.g. queue manage, etc.)
+- [x] refactoring
+- [x] remove all `unwrap()`
+- [x] make unique queue system, not `builtin-queue`
