@@ -75,8 +75,7 @@ async fn main() {
                 if let Some(icon_url) = bot_info.icon.clone() {
                     Mutex::new(format!(
                         "https://cdn.discordapp.com/app-icons/{}/{}.png",
-                        bot_info.id.0,
-                        icon_url
+                        bot_info.id.0, icon_url
                     ))
                 } else {
                     Mutex::new("https://cdn.discordapp.com/embed/avatars/0.png".to_string())

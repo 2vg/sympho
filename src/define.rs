@@ -1,6 +1,6 @@
-use const_env::from_env;
 use crate::commands::*;
 use crate::import::*;
+use const_env::from_env;
 
 // Global const
 #[from_env("SYMPHO_PREFIX")]
@@ -144,7 +144,7 @@ pub async fn check_bot_using_at_other_chan(
     manager: &Songbird,
     guild: &Guild,
     msg: &Message,
-    ctx: &Context
+    ctx: &Context,
 ) -> bool {
     if let Some(channel_id) = guild
         .voice_states
@@ -187,6 +187,6 @@ pub fn dur_to_hhmmss(dur: Duration) -> String {
     let seconds = secs % 60;
     let minutes = (secs / 60) % 60;
     let hours = (secs / 60) / 60;
-    
+
     format!("{:02}:{:02}:{:02}", hours, minutes, seconds)
 }
