@@ -73,7 +73,7 @@ clone, set token to `DISCORD_TOKEN` env var, then `cargo build`, then run it.
 
 ## TODO
 
-- [ ] add more command(e.g. queue manage, etc.)
+- [ ] add more command(e.g. queue manage, shuffle, etc.)
 - [x] refactoring
 - [x] remove all `unwrap()`
 - [x] make unique queue system, not `builtin-queue`
