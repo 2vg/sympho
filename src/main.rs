@@ -87,6 +87,7 @@ async fn main() {
 
     let framework = StandardFramework::new()
         .configure(|c| c.prefix(SYMPHO_PREFIX))
+        .before(before)
         .group(&GENERAL_GROUP);
 
     let mut client = Client::builder(&token)
