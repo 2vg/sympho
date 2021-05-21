@@ -20,7 +20,7 @@ simple discord music bot for my hobby.</br>
 
     - `leave` :</br>Leave from the current channel.
 
-    - `play <url>` :</br>Start to play music. supported some site, support playlist.
+    - `play <url>, play with file upload` :</br>Start to play music. supported some site, support playlist, and file upload
 
     - `stop` :</br>Stop to the music currently playing(if there) and queue will be empty.
 
@@ -43,6 +43,7 @@ simple discord music bot for my hobby.</br>
 
 - All written in Rust
 - Completely open source, and Easy to build (just set `DISCORD_TOKEN` env then run `cargo run`)
+- Sympho can play the uploaded audio file
 - Depends on youtube-dl, but not limited to Youtube or Soundcloud URLs(For example, sympho also accept bilibili videos)
 - There are no premier restrictions like Rythm bot etc.
 - The code isn't too dirty, so anyone can customize it as like, for self-host

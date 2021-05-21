@@ -4,7 +4,7 @@ use crate::import::*;
 #[command]
 #[aliases("p")]
 #[only_in(guilds)]
-#[description("Start to play music. supported some site, support playlist.\nusage: <PREFIX>play https://youtube.com/watch?v=...")]
+#[description("Start to play music. supported some site, support playlist, file upload\nusage: <PREFIX>play https://youtube.com/watch?v=... or, play with file upload")]
 async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     let url = if let Ok(url) = args.single::<String>() {
         url
