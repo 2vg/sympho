@@ -4,6 +4,10 @@ use sympho::import::*;
 // Check user can use command
 #[hook]
 async fn before(ctx: &Context, msg: &Message, command_name: &str) -> bool {
+    if EXCLUDE_HOOK.contains(&command_name) {
+        return true;
+    }
+
     let guild = if let Some(g) = msg.guild(&ctx.cache).await {
         g
     } else {
@@ -70,40 +74,43 @@ async fn main() {
     let http = Http::new_with_token(&token);
 
     if let Ok(bot_info) = http.get_current_application_info().await {
-        unsafe {
-            SYMPHO_ICON.get_or_init(|| {
-                if let Some(icon_url) = bot_info.icon.clone() {
-                    Mutex::new(format!(
-                        "https://cdn.discordapp.com/app-icons/{}/{}.png",
-                        bot_info.id.0, icon_url
-                    ))
-                } else {
-                    Mutex::new("https://cdn.discordapp.com/embed/avatars/0.png".to_string())
-                }
-            });
-            SYMPHO_NAME.get_or_init(|| Mutex::new(bot_info.name.clone()));
-        }
+        SYMPHO_ICON.get_or_init(|| {
+            if let Some(icon_url) = bot_info.icon.clone() {
+                Mutex::new(format!(
+                    "https://cdn.discordapp.com/app-icons/{}/{}.png",
+                    bot_info.id.0, icon_url
+                ))
+            } else {
+                Mutex::new("https://cdn.discordapp.com/embed/avatars/0.png".to_string())
+            }
+        });
+        SYMPHO_NAME.get_or_init(|| Mutex::new(bot_info.name.clone()));
+        SYMPHO_PREFIX
+            .get_or_init(|| Mutex::new(env::var("SYMPHO_PREFIX").unwrap_or("!".to_string())));
     }
 
+    let prefix = if let Ok(sympho_prefix) = SYMPHO_PREFIX
+        .get_or_init(|| Mutex::new("!".to_string()))
+        .lock()
+    {
+        (*sympho_prefix).clone()
+    } else {
+        "!".to_string()
+    };
+
     let framework = StandardFramework::new()
-        .configure(|c| c.prefix(SYMPHO_PREFIX))
+        .configure(|c| c.prefix(&prefix))
         .before(before)
         .group(&GENERAL_GROUP);
+
+    let songbird_config = Config::default()
+        .crypto_mode(CryptoMode::Lite)
+        .decode_mode(DecodeMode::Decode);
 
     let mut client = Client::builder(&token)
         .event_handler(Handler)
         .framework(framework)
-        .register_songbird_with({
-            let songbird = songbird::Songbird::serenity();
-
-            songbird.set_config(Config {
-                crypto_mode: CryptoMode::Lite,
-                decode_mode: DecodeMode::Pass,
-                preallocated_tracks: 1,
-            });
-
-            songbird
-        })
+        .register_songbird_from_config(songbird_config)
         .await
         .expect("Err creating client");
 
