@@ -17,12 +17,14 @@ humantime = "2.1.0"
 const_env = "0.1.2"
 
 [dependencies.serenity]
-version = "0.10.5"
 features = ["cache", "standard_framework", "voice", "rustls_backend"]
+git = "https://github.com/serenity-rs/serenity"
+branch = "next"
 
 [dependencies.songbird]
-version = "0.1.6"
-features = ["builtin-queue"]
+git = "https://github.com/serenity-rs/songbird"
+branch = "next"
+features = ["driver-core"]
 
 [dependencies.tokio]
 version = "1.5.0"
