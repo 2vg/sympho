@@ -90,7 +90,7 @@ async fn skip(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
             } else if args.len() == 1 {
                 let queue_len = sympho_data.queue.len();
 
-                if start < queue_len {
+                if start <= queue_len {
                     if start == 0 {
                         if let Some((current, _)) = &sympho_data.current {
                             current.stop()?;
@@ -110,7 +110,7 @@ async fn skip(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
             } else if args.len() == 2 {
                 let queue_len = sympho_data.queue.len();
 
-                if start < queue_len && end < queue_len {
+                if start < queue_len && end <= queue_len {
                     sympho_data.queue.drain(start - 1..end);
                     check_msg(
                         msg.reply(
