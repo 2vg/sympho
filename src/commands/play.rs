@@ -6,7 +6,7 @@ const SHUFFLE_WORDS: &[&str] = &["shuffle", "random"];
 #[command]
 #[aliases("p")]
 #[only_in(guilds)]
-#[description("Start to play music. supported some site, support playlist, file upload\nusage: <PREFIX>play https://youtube.com/watch?v=... or, play with file upload.\nif passed playlist url and passed it with "shuffle" or "random" as second argments, playlist queue will be shuffled.")]
+#[description(r#"Start to play music. supported some site, support playlist, file upload\nusage: <PREFIX>play https://youtube.com/watch?v=... or, play with file upload.\nif passed playlist url and passed it with "shuffle" or "random" as second argments, playlist queue will be shuffled."#)]
 async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     let url = if let Ok(url) = args.single::<String>() {
         url
