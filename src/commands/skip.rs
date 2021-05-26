@@ -15,12 +15,11 @@ async fn skip(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         }
     } else if args.len() == 2 {
         if let Ok(arg) = args.single::<usize>().and_then(|first_arg| {
-            args.single::<usize>().and_then(|second_arg| {
-                Ok((first_arg, second_arg))
-            })
+            args.single::<usize>()
+                .and_then(|second_arg| Ok((first_arg, second_arg)))
         }) {
             if arg.0 < 1 || arg.1 < 2 || arg.0 >= arg.1 {
-                return Ok(())
+                return Ok(());
             };
             arg
         } else {
@@ -77,7 +76,10 @@ async fn skip(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
             if args.len() == 0 {
                 if let Some((current, _)) = &sympho_data.current {
                     current.stop()?;
-                    check_msg(msg.reply(&ctx.http, format!("Currently playing song skipped.")).await);
+                    check_msg(
+                        msg.reply(&ctx.http, format!("Currently playing song skipped."))
+                            .await,
+                    );
                 }
             } else if args.len() == 1 {
                 let queue_len = sympho_data.queue.len();
@@ -86,19 +88,31 @@ async fn skip(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
                     if start == 0 {
                         if let Some((current, _)) = &sympho_data.current {
                             current.stop()?;
-                            check_msg(msg.reply(&ctx.http, format!("Currently playing song skipped.")).await);
+                            check_msg(
+                                msg.reply(&ctx.http, format!("Currently playing song skipped."))
+                                    .await,
+                            );
                         }
                     } else {
-                        sympho_data.queue.drain(start - 1 .. start);
-                        check_msg(msg.reply(&ctx.http, format!("No.{} song skipped from queue.", start)).await);
+                        sympho_data.queue.drain(start - 1..start);
+                        check_msg(
+                            msg.reply(&ctx.http, format!("No.{} song skipped from queue.", start))
+                                .await,
+                        );
                     }
                 }
             } else if args.len() == 2 {
                 let queue_len = sympho_data.queue.len();
 
                 if start < queue_len && end < queue_len {
-                    sympho_data.queue.drain(start - 1 .. end);
-                    check_msg(msg.reply(&ctx.http, format!("No.{} - No.{} song skipped from queue.", start, end)).await);
+                    sympho_data.queue.drain(start - 1..end);
+                    check_msg(
+                        msg.reply(
+                            &ctx.http,
+                            format!("No.{} - No.{} song skipped from queue.", start, end),
+                        )
+                        .await,
+                    );
                 }
             }
         }
