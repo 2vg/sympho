@@ -30,7 +30,7 @@ simple discord music bot for my hobby.</br>
 
     - `resume` :</br>Resume the music currently playing.
 
-    - `skip` :</br>Skip the music currently playing.
+    - `skip` :</br>Skip the music currently playing or specified number of songs from the queue.
 
     - `loop <on/off>` :</br>Enable/Disable loop the current playing song.
 
