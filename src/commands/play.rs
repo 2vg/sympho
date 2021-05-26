@@ -1,10 +1,12 @@
 use crate::define::*;
 use crate::import::*;
 
+const SHUFFLE_WORDS: &[&str] = &["shuffle", "random"];
+
 #[command]
 #[aliases("p")]
 #[only_in(guilds)]
-#[description("Start to play music. supported some site, support playlist, file upload\nusage: <PREFIX>play https://youtube.com/watch?v=... or, play with file upload")]
+#[description("Start to play music. supported some site, support playlist, file upload\nusage: <PREFIX>play https://youtube.com/watch?v=... or, play with file upload.\nif passed playlist url and passed it with "shuffle" or "random" as second argments, playlist queue will be shuffled.")]
 async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     let url = if let Ok(url) = args.single::<String>() {
         url
@@ -22,6 +24,16 @@ async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
 
             return Ok(());
         }
+    };
+
+    let enable_shuffle = if let Ok(shuffle) = args.single::<String>() {
+        if SHUFFLE_WORDS.contains(&(shuffle.as_str())) {
+            true
+        } else {
+            false
+        }
+    } else {
+        false
     };
 
     if Url::parse(&url).is_err() {
@@ -57,7 +69,7 @@ async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     if let Some(handler_lock) = manager.get(guild_id) {
         let mut handler = handler_lock.lock().await;
 
-        let len = enqueue(ctx, guild_id.0, url.clone()).await;
+        let len = enqueue(ctx, guild_id.0, url.clone(), enable_shuffle).await;
 
         if len != 0 {
             check_msg(
@@ -77,7 +89,7 @@ async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     Ok(())
 }
 
-pub async fn enqueue(ctx: &Context, key: u64, url: String) -> usize {
+pub async fn enqueue(ctx: &Context, key: u64, url: String, enable_shuffle: bool) -> usize {
     let data = ctx.data.read().await;
     if let Some(sympho_global_mutex) = data.get::<SymphoGlobal>() {
         let mut sympho_global = sympho_global_mutex.write().await;
@@ -106,7 +118,9 @@ pub async fn enqueue(ctx: &Context, key: u64, url: String) -> usize {
                 match yt {
                     YoutubeDlOutput::Playlist(yt_pl) => {
                         let entries = yt_pl.entries.unwrap_or(vec![]);
+                        let mut track_vec = Vec::new();
                         let mut list_count = 0usize;
+
                         for sv in entries {
                             let url = sv.url.unwrap_or("".to_string());
                             if url != "" {
@@ -115,7 +129,7 @@ pub async fn enqueue(ctx: &Context, key: u64, url: String) -> usize {
                                 } else {
                                     Duration::new(0, 0)
                                 };
-                                sympho_data.queue.push(TrackSympho {
+                                track_vec.push(TrackSympho {
                                     url: format!("https://www.youtube.com/watch?v={}", url),
                                     title: sv.title,
                                     thumb: sv.thumbnail,
@@ -125,6 +139,14 @@ pub async fn enqueue(ctx: &Context, key: u64, url: String) -> usize {
                                 list_count += 1;
                             };
                         }
+
+                        if enable_shuffle {
+                            let mut rng = rand::thread_rng();
+                            track_vec.shuffle(&mut rng);
+                        }
+
+                        sympho_data.queue.extend_from_slice(&track_vec);
+
                         return list_count;
                     }
                     YoutubeDlOutput::SingleVideo(yt_sv) => {

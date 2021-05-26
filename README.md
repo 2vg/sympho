@@ -20,7 +20,9 @@ simple discord music bot for my hobby.</br>
 
     - `leave` :</br>Leave from the current channel.
 
-    - `play <url>, play with file upload` :</br>Start to play music. supported some site, support playlist, and file upload
+    - `play <url>, play with file upload` :</br>
+      Start to play music. supported some site, support playlist, and file upload.</br>
+      if passed playlist url and passed it with "shuffle" or "random" as second argments, playlist queue will be shuffled.
 
     - `stop` :</br>Stop to the music currently playing(if there) and queue will be empty.
 
@@ -74,7 +76,7 @@ clone, set token to `DISCORD_TOKEN` env var, then `cargo build`, then run it.
 
 ## TODO
 
-- [ ] add more command(e.g. queue manage, shuffle, etc.)
+- [ ] add more command(?)
 - [x] refactoring
 - [x] remove all `unwrap()`
 - [x] make unique queue system, not `builtin-queue`

@@ -1,6 +1,7 @@
 pub use {
     humantime::format_duration,
     once_cell::sync::OnceCell,
+    rand::seq::SliceRandom,
     serenity::{
         async_trait,
         client::{Client, Context, EventHandler},

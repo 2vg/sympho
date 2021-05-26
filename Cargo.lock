@@ -1371,6 +1371,7 @@ dependencies = [
  "const_env",
  "humantime",
  "once_cell",
+ "rand",
  "serenity",
  "songbird",
  "tokio",
