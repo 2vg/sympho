@@ -29,9 +29,15 @@ async fn skip(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         check_msg(
             msg.reply(
                 ctx,
-                "example usage: <PREFIX>skip <no number or 0> -> skip current playing song.\n
-                 example usage: <PREFIX>skip 5 -> skip No.5 song.\n
-                 example usage: <PREFIX>skip 1 10 -> skip No.1 ~ N0.10 songs on queue.",
+                [
+                    "example usage: <PREFIX>skip <no number or 0> -> skip current playing song.",
+                    "example usage: <PREFIX>skip 5 -> skip No.5 song.",
+                    "example usage: <PREFIX>skip 1 10 -> skip No.1 ~ N0.10 songs on queue.",
+                ]
+                .iter()
+                .map(|s| s.to_string())
+                .collect::<Vec<_>>()
+                .join("\n")
             )
             .await,
         );
