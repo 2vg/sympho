@@ -16,6 +16,14 @@ async fn help(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
 
 async fn say_help_with_embed(msg: &Message, ctx: &Context, cmd_name: &str) {
     let cmd_group = &GENERAL_GROUP.options;
+    let prefix = if let Ok(sympho_prefix) = SYMPHO_PREFIX
+        .get_or_init(|| Mutex::new("!".to_string()))
+        .lock()
+    {
+        (*sympho_prefix).clone()
+    } else {
+        "!".to_string()
+    };
 
     for cmd in cmd_group.commands {
         if cmd
@@ -30,29 +38,27 @@ async fn say_help_with_embed(msg: &Message, ctx: &Context, cmd_name: &str) {
                     .send_message(&ctx.http, |m| {
                         m.embed(|e| {
                             e.author(|a| {
-                                if let Ok(icon) = unsafe {
-                                    SYMPHO_ICON.get_or_init(|| {
+                                if let Ok(icon) = SYMPHO_ICON
+                                    .get_or_init(|| {
                                         Mutex::new(
                                             "https://cdn.discordapp.com/embed/avatars/0.png"
                                                 .to_string(),
                                         )
                                     })
-                                }
-                                .lock()
+                                    .lock()
                                 {
                                     a.icon_url(icon);
                                 }
-                                if let Ok(name) = unsafe {
-                                    SYMPHO_NAME.get_or_init(|| Mutex::new("Sympho".to_string()))
-                                }
-                                .lock()
+                                if let Ok(name) = SYMPHO_NAME
+                                    .get_or_init(|| Mutex::new("Sympho".to_string()))
+                                    .lock()
                                 {
                                     a.name(name);
                                 }
                                 a.url("https://github.com/2vg/sympho");
                                 a
                             });
-                            e.title(format!("{}{}", SYMPHO_PREFIX, cmd_name));
+                            e.title(format!("{}{}", prefix, cmd_name));
                             e.description(cmd.options.desc.unwrap_or("description is empty"));
                             if cmd.options.names.len() > 1 {
                                 e.field(
@@ -61,7 +67,7 @@ async fn say_help_with_embed(msg: &Message, ctx: &Context, cmd_name: &str) {
                                         .names
                                         .iter()
                                         .skip(1)
-                                        .map(|s| format!("{}{}", SYMPHO_PREFIX, s))
+                                        .map(|s| format!("{}{}", prefix, s))
                                         .collect::<Vec<_>>()
                                         .join("\n"),
                                     false,
@@ -79,12 +85,20 @@ async fn say_help_with_embed(msg: &Message, ctx: &Context, cmd_name: &str) {
 
 async fn say_help_list_with_embed(msg: &Message, ctx: &Context) {
     let cmd_group = &GENERAL_GROUP.options;
+    let prefix = if let Ok(sympho_prefix) = SYMPHO_PREFIX
+        .get_or_init(|| Mutex::new("!".to_string()))
+        .lock()
+    {
+        (*sympho_prefix).clone()
+    } else {
+        "!".to_string()
+    };
 
     let cmds = cmd_group
         .commands
         .iter()
         .fold(String::new(), |mut str, cmd| {
-            str += &format!("{}{}\n", SYMPHO_PREFIX, cmd.options.names[0]);
+            str += &format!("{}{}\n", prefix, cmd.options.names[0]);
             str
         });
 
@@ -93,21 +107,20 @@ async fn say_help_list_with_embed(msg: &Message, ctx: &Context) {
             .send_message(&ctx.http, |m| {
                 m.embed(|e| {
                     e.author(|a| {
-                        if let Ok(icon) = unsafe {
-                            SYMPHO_ICON.get_or_init(|| {
+                        if let Ok(icon) = SYMPHO_ICON
+                            .get_or_init(|| {
                                 Mutex::new(
                                     "https://cdn.discordapp.com/embed/avatars/0.png".to_string(),
                                 )
                             })
-                        }
-                        .lock()
+                            .lock()
                         {
                             a.icon_url(icon);
                         }
 
-                        if let Ok(name) =
-                            unsafe { SYMPHO_NAME.get_or_init(|| Mutex::new("Sympho".to_string())) }
-                                .lock()
+                        if let Ok(name) = SYMPHO_NAME
+                            .get_or_init(|| Mutex::new("Sympho".to_string()))
+                            .lock()
                         {
                             a.name(name);
                         }

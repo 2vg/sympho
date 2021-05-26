@@ -75,21 +75,20 @@ async fn say_track_with_embed(
                 m.content("_nowplaying ♡:_");
                 m.embed(|e| {
                     e.author(|a| {
-                        if let Ok(icon) = unsafe {
-                            SYMPHO_ICON.get_or_init(|| {
+                        if let Ok(icon) = SYMPHO_ICON
+                            .get_or_init(|| {
                                 Mutex::new(
                                     "https://cdn.discordapp.com/embed/avatars/0.png".to_string(),
                                 )
                             })
-                        }
-                        .lock()
+                            .lock()
                         {
                             a.icon_url(icon);
                         }
 
-                        if let Ok(name) =
-                            unsafe { SYMPHO_NAME.get_or_init(|| Mutex::new("Sympho".to_string())) }
-                                .lock()
+                        if let Ok(name) = SYMPHO_NAME
+                            .get_or_init(|| Mutex::new("Sympho".to_string()))
+                            .lock()
                         {
                             a.name(name);
                         }

@@ -1,13 +1,10 @@
 use crate::commands::*;
 use crate::import::*;
 
-// Global const
-#[from_env("SYMPHO_PREFIX")]
-pub const SYMPHO_PREFIX: &'static str = "!";
-
 // Global var
-pub static mut SYMPHO_ICON: OnceCell<Mutex<String>> = OnceCell::new();
-pub static mut SYMPHO_NAME: OnceCell<Mutex<String>> = OnceCell::new();
+pub static SYMPHO_ICON: OnceCell<Mutex<String>> = OnceCell::new();
+pub static SYMPHO_NAME: OnceCell<Mutex<String>> = OnceCell::new();
+pub static SYMPHO_PREFIX: OnceCell<Mutex<String>> = OnceCell::new();
 
 // Track Info
 #[derive(Clone, Debug)]
@@ -53,6 +50,8 @@ impl EventHandler for Handler {
     help, join, leave, play, stop, volume, pause, resume, skip, looping, current, queue
 )]
 pub struct General;
+
+pub const EXCLUDE_HOOK: &[&str] = &["help"];
 
 pub fn check_msg(result: SerenityResult<Message>) {
     if let Err(why) = result {
