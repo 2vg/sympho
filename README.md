@@ -50,10 +50,11 @@ simple discord music bot for my hobby.</br>
 
 ## Dis-Advantages over other bots
 
-- Missing commands
+- Missing some commands
 - Self-hosting costs
 - Difficult to customize for people who can't Rust
 - There is no such thing as an effect function for song
+- The library is still unstable
 - The audio area is still unstable(there is a problem with the sound being played, or the sound at the start of playback is a little strange.)
 
 ## Require
