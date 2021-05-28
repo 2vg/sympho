@@ -100,7 +100,12 @@ async fn skip(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
                             );
                         }
                     } else {
-                        sympho_data.queue.drain(start - 1..start);
+                        let drained_queue = sympho_data.queue.drain(start - 1..start);
+                        let drained_dur = drained_queue.as_slice().iter().fold(Duration::new(0, 0), |mut dur, track| {
+                            dur += track.duration;
+                            dur
+                        });
+                        sympho_data.queue_duration -= drained_dur;
                         check_msg(
                             msg.reply(&ctx.http, format!("No.{} song skipped from queue.", start))
                                 .await,
@@ -111,7 +116,12 @@ async fn skip(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
                 let queue_len = sympho_data.queue.len();
 
                 if start < queue_len && end <= queue_len {
-                    sympho_data.queue.drain(start - 1..end);
+                    let drained_queue = sympho_data.queue.drain(start - 1..end);
+                    let drained_dur = drained_queue.as_slice().iter().fold(Duration::new(0, 0), |mut dur, track| {
+                        dur += track.duration;
+                        dur
+                    });
+                    sympho_data.queue_duration -= drained_dur;
                     check_msg(
                         msg.reply(
                             &ctx.http,
