@@ -76,6 +76,17 @@ async fn join(ctx: &Context, msg: &Message) -> CommandResult {
             },
         );
 
+        handle.add_global_event(
+            Event::Core(CoreEvent::DriverReconnectFailed),
+            DriverReconnectFailedNotifier {
+                manager: manager.clone(),
+                data: ctx.data.clone(),
+                handler: handle_lock.clone(),
+                guild_id: guild_id.0,
+                chan_id: connect_to.clone(),
+            },
+        );
+
         check_msg(
             msg.channel_id
                 .say(&ctx.http, &format!("Joined {}", connect_to.mention()))
