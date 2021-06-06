@@ -61,7 +61,7 @@ async fn say_track_with_embed(
     msg: &Message,
     ctx: &Context,
     track_handle: &TrackHandle,
-    _track_sympho: &TrackSympho,
+    track_sympho: &TrackSympho,
 ) {
     let track_current_position = if let Ok(info) = track_handle.get_info().await {
         dur_to_hhmmss((*info).position)
@@ -98,11 +98,11 @@ async fn say_track_with_embed(
                         a
                     });
                     e.title(
-                        track_handle
-                            .metadata()
-                            .title
-                            .as_ref()
-                            .unwrap_or(&"Unknown".to_string()),
+                        if &track_sympho.title == "" {
+                            "Unknown".to_string()
+                        } else {
+                            track_sympho.title.clone()
+                        }
                     );
                     e.description(&format!(
                         "{} / {}",
