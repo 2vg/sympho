@@ -1,7 +1,9 @@
 pub use {
+    anyhow::{bail, Result},
     humantime::format_duration,
     once_cell::sync::OnceCell,
     rand::seq::SliceRandom,
+    serde_json::{json, Value},
     serenity::{
         async_trait,
         client::{Client, Context, EventHandler},
@@ -25,23 +27,25 @@ pub use {
         Result as SerenityResult,
     },
     songbird::{
-        CoreEvent,
         create_player,
         driver::{CryptoMode, DecodeMode},
         id::ChannelId as VoiceChannelId,
         input::{restartable::Restartable, Codec, Input},
         tracks::{PlayMode, TrackHandle},
-        Call, Config, Event, EventContext, EventHandler as VoiceEventHandler, SerenityInit,
-        Songbird, TrackEvent,
+        Call, Config, CoreEvent, Event, EventContext, EventHandler as VoiceEventHandler,
+        SerenityInit, Songbird, TrackEvent,
     },
     std::{
         collections::{HashMap, HashSet},
         env,
+        io::Read,
         path::Path,
+        process::{Command, Stdio},
         sync::{Arc, Mutex},
         time::Duration,
     },
     tokio::sync::RwLock,
     url::Url,
+    wait_timeout::ChildExt,
     youtube_dl::{YoutubeDl, YoutubeDlOutput},
 };
