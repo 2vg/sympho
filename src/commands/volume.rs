@@ -2,6 +2,7 @@ use crate::define::*;
 use crate::import::*;
 
 #[command]
+#[aliases("v", "vol")]
 #[only_in(guilds)]
 #[description("Set the music volume. range is 0.0 ~ 100.0.\nusage: <PREFIX>volume 12.8")]
 async fn volume(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
