@@ -54,14 +54,14 @@ async fn looping(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult 
                 if looping == "on" {
                     if let Ok(_) = current.enable_loop() {
                         check_msg(
-                            msg.reply(ctx, "Enabled loop the current playing song,")
+                            msg.reply(ctx, "Enabled loop the current playing song.")
                                 .await,
                         );
                     }
                 } else {
                     if let Ok(_) = current.disable_loop() {
                         check_msg(
-                            msg.reply(ctx, "Disabled loop the current playing song,")
+                            msg.reply(ctx, "Disabled loop the current playing song.")
                                 .await,
                         );
                     }
