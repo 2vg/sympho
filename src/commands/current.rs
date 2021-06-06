@@ -97,13 +97,7 @@ async fn say_track_with_embed(
 
                         a
                     });
-                    e.title(
-                        if &track_sympho.title == "" {
-                            "Unknown".to_string()
-                        } else {
-                            track_sympho.title.clone()
-                        }
-                    );
+                    e.title(track_sympho.title.clone());
                     e.description(&format!(
                         "{} / {}",
                         track_current_position,
