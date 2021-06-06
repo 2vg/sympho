@@ -51,7 +51,7 @@ impl EventHandler for Handler {
 )]
 pub struct General;
 
-pub const EXCLUDE_HOOK: &[&str] = &["help"];
+pub const EXCLUDE_HOOK: &[&str] = &["help", "q", "queue", "current", "np", "nowplaying", "なうぷれ"];
 
 pub fn check_msg(result: SerenityResult<Message>) {
     if let Err(why) = result {
