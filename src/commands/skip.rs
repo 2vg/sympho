@@ -37,7 +37,7 @@ async fn skip(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
                 .iter()
                 .map(|s| s.to_string())
                 .collect::<Vec<_>>()
-                .join("\n")
+                .join("\n"),
             )
             .await,
         );
@@ -101,10 +101,13 @@ async fn skip(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
                         }
                     } else {
                         let drained_queue = sympho_data.queue.drain(start - 1..start);
-                        let drained_dur = drained_queue.as_slice().iter().fold(Duration::new(0, 0), |mut dur, track| {
-                            dur += track.duration;
-                            dur
-                        });
+                        let drained_dur = drained_queue.as_slice().iter().fold(
+                            Duration::new(0, 0),
+                            |mut dur, track| {
+                                dur += track.duration;
+                                dur
+                            },
+                        );
                         sympho_data.queue_duration -= drained_dur;
                         check_msg(
                             msg.reply(&ctx.http, format!("No.{} song skipped from queue.", start))
@@ -117,10 +120,13 @@ async fn skip(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
 
                 if start < queue_len && end <= queue_len {
                     let drained_queue = sympho_data.queue.drain(start - 1..end);
-                    let drained_dur = drained_queue.as_slice().iter().fold(Duration::new(0, 0), |mut dur, track| {
-                        dur += track.duration;
-                        dur
-                    });
+                    let drained_dur = drained_queue.as_slice().iter().fold(
+                        Duration::new(0, 0),
+                        |mut dur, track| {
+                            dur += track.duration;
+                            dur
+                        },
+                    );
                     sympho_data.queue_duration -= drained_dur;
                     check_msg(
                         msg.reply(
