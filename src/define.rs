@@ -71,20 +71,20 @@ pub fn is_file_url(url: &str) -> bool {
 pub async fn get_source(url: String) -> Result<Input, ()> {
     if is_file_url(&url) {
         if let Ok(source) = Restartable::ffmpeg(url.clone(), false).await {
-            //let mut source = Input::from(source);
-            //if let Codec::Opus(ref mut opus) = source.kind {
-            //    opus.allow_passthrough = false;
-            //}
+            let mut source = Input::from(source);
+            if let Codec::Opus(ref mut opus) = source.kind {
+                opus.allow_passthrough = false;
+            }
             Ok(source.into())
         } else {
             Err(())
         }
     } else {
         if let Ok(source) = Restartable::ytdl(url.clone(), false).await {
-            //let mut source = Input::from(source);
-            //if let Codec::Opus(ref mut opus) = source.kind {
-            //    opus.allow_passthrough = false;
-            //}
+            let mut source = Input::from(source);
+            if let Codec::Opus(ref mut opus) = source.kind {
+                opus.allow_passthrough = false;
+            }
             Ok(source.into())
         } else {
             Err(())

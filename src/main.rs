@@ -104,7 +104,7 @@ async fn main() {
         .group(&GENERAL_GROUP);
 
     let songbird_config = Config::default()
-        .crypto_mode(CryptoMode::Normal)
+        .crypto_mode(CryptoMode::Lite)
         .decode_mode(DecodeMode::Pass);
 
     let mut client = Client::builder(&token)
