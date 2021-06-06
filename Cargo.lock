@@ -36,6 +36,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "anyhow"
+version = "1.0.40"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "28b2cd92db5cbd74e8e5028f7e27dd7aa3090e89e4f2a197cc7c8dfb69c7063b"
+
+[[package]]
 name = "arrayvec"
 version = "0.4.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1368,10 +1374,13 @@ checksum = "1e81da0851ada1f3e9d4312c704aa4f8806f0f9d69faaf8df2f3464b4a9437c2"
 name = "sympho"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "const_env",
  "humantime",
  "once_cell",
  "rand",
+ "serde",
+ "serde_json",
  "serenity",
  "songbird",
  "tokio",
@@ -1379,6 +1388,7 @@ dependencies = [
  "tracing-futures",
  "tracing-subscriber",
  "url",
+ "wait-timeout",
  "youtube_dl",
 ]
 
