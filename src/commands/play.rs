@@ -99,14 +99,25 @@ pub async fn enqueue(ctx: &Context, key: u64, url: String, enable_shuffle: bool)
         });
 
         if is_file_url(&url) {
-            let dur = Duration::new(0, 0);
-            sympho_data.queue.push(TrackSympho {
-                url: url.clone(),
-                title: "Unknown".to_string(),
-                thumb: None,
-                duration: dur,
-            });
-            sympho_data.queue_duration += dur;
+            if let Ok(info) = get_audio_file_info(&url) {
+                sympho_data.queue.push(TrackSympho {
+                    url: url.clone(),
+                    title: info.0,
+                    thumb: None,
+                    duration: info.1,
+                });
+                sympho_data.queue_duration += info.1;
+            } else {
+                let dur = Duration::new(0, 0);
+                sympho_data.queue.push(TrackSympho {
+                    url: url.clone(),
+                    title: "Unknown".to_string(),
+                    thumb: None,
+                    duration: dur,
+                });
+                sympho_data.queue_duration += dur;
+            };
+
             return 1;
         } else {
             let output = YoutubeDl::new(&url)

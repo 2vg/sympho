@@ -196,3 +196,65 @@ pub fn dur_to_hhmmss(dur: Duration) -> String {
 
     format!("{:02}:{:02}:{:02}", hours, minutes, seconds)
 }
+
+pub fn run_cmd(cmd: &str, args: &[&str], timeout: Option<Duration>) -> Result<Value> {
+    let mut child = Command::new(cmd)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .args(args)
+        .spawn()?;
+
+    // Continually read from stdout so that it does not fill up with large output and hang forever.
+    // We don't need to do this for stderr since only stdout has potentially giant JSON.
+    let mut stdout = Vec::new();
+    let child_stdout = child.stdout.take();
+    std::io::copy(&mut child_stdout.unwrap(), &mut stdout)?;
+
+    let exit_code = if let Some(timeout) = timeout {
+        match child.wait_timeout(timeout)? {
+            Some(status) => status,
+            None => {
+                child.kill()?;
+                bail!("Process time out.");
+            }
+        }
+    } else {
+        child.wait()?
+    };
+
+    if exit_code.success() {
+        Ok(serde_json::from_reader(stdout.as_slice())?)
+    } else {
+        let mut stderr = vec![];
+        if let Some(mut reader) = child.stderr {
+            reader.read_to_end(&mut stderr)?;
+        }
+        let stderr = String::from_utf8(stderr).unwrap_or_default();
+        bail!(stderr);
+    }
+}
+
+pub fn get_audio_file_info(url: &str) -> Result<(String, Duration)> {
+    let info = run_cmd(
+        "ffprobe",
+        &[
+            "-hide_banner",
+            "-show_entries",
+            "format_tags=TITLE:format=duration",
+            "-of",
+            "json",
+            "-v",
+            "quiet",
+            url,
+        ],
+        Some(Duration::new(5, 0)),
+    )?;
+    let title = String::from(info["format"]["tags"]["TITLE"].as_str().unwrap_or(""));
+    let dur = Duration::from_secs_f64(
+        info["format"]["duration"]
+            .as_str()
+            .unwrap_or("0.0")
+            .parse::<f64>()?,
+    );
+    Ok((title, dur))
+}
