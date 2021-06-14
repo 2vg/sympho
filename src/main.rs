@@ -56,6 +56,11 @@ async fn before(ctx: &Context, msg: &Message, command_name: &str) -> bool {
                     )
                     .await,
                 );
+            },
+            "leave" => {
+                if guild.voice_states.len() == 1 {
+                    return true;
+                }
             }
             _ => {}
         }
