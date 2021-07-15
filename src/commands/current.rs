@@ -64,7 +64,7 @@ async fn say_track_with_embed(
     track_sympho: &TrackSympho,
 ) {
     let track_current_position = if let Ok(info) = track_handle.get_info().await {
-        dur_to_hhmmss((*info).position)
+        dur_to_hhmmss(info.position)
     } else {
         "Unknown".to_string()
     };
