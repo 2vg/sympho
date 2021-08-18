@@ -6,39 +6,33 @@ const SHUFFLE_WORDS: &[&str] = &["shuffle", "random"];
 #[command]
 #[aliases("p")]
 #[only_in(guilds)]
-#[description("Start to play music. supported some site, support playlist, file upload\nusage: <PREFIX>play https://youtube.com/watch?v=... or, play with file upload.\nif passed playlist url and passed it with \"shuffle\" or \"random\" as second argments, playlist queue will be shuffled.")]
+#[description("Start to play music. supported some site, support playlist, file upload\nusage: <PREFIX>play https://youtube.com/watch?v=... or, just type keywords then bot will play the first result from youtube, or play with file upload.\nif passed playlist url and passed it with \"shuffle\" or \"random\" as last argments, playlist queue will be shuffled.")]
 async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
-    let url = if let Ok(url) = args.single::<String>() {
-        url
-    } else {
-        if &msg.attachments.len() != &0 {
-            (&msg).attachments[0].url.clone()
-        } else {
-            check_msg(
-                msg.reply(
-                    &ctx.http,
-                    "Must provide a URL to a video or audio, or attachments",
-                )
-                .await,
-            );
+    let all_args = args.iter::<String>().map(|arg| arg.unwrap_or_default()).collect::<Vec<String>>();
 
-            return Ok(());
-        }
+    if all_args.len() == 0 {
+        check_msg(
+            msg.reply(
+                &ctx.http,
+                "Must provide a URL to a video or audio, keywords, or attachments",
+            )
+            .await,
+        );
+
+        return Ok(());
+    }
+
+    let url = if Url::parse(all_args.first().unwrap_or(&String::new()).as_str()).is_ok() {
+        all_args[0].clone()
+    } else {
+        format!("ytsearch1:{}", all_args.iter().map(|s| s.to_string()).collect::<Vec<_>>().join(" "))
     };
 
-    let enable_shuffle = if let Ok(shuffle) = args.single::<String>() {
-        if SHUFFLE_WORDS.contains(&(shuffle.as_str())) {
-            true
-        } else {
-            false
-        }
+    let enable_shuffle = if SHUFFLE_WORDS.contains(&all_args.last().unwrap_or(&String::new()).as_str()) {
+        true
     } else {
         false
     };
-
-    if Url::parse(&url).is_err() {
-        return Ok(());
-    }
 
     let guild = if let Some(g) = msg.guild(&ctx.cache).await {
         g
