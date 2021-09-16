@@ -56,7 +56,7 @@ async fn before(ctx: &Context, msg: &Message, command_name: &str) -> bool {
                     )
                     .await,
                 );
-            },
+            }
             _ => {}
         }
         return false;

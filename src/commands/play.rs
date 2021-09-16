@@ -8,7 +8,10 @@ const SHUFFLE_WORDS: &[&str] = &["shuffle", "random"];
 #[only_in(guilds)]
 #[description("Start to play music. supported some site, support playlist, file upload\nusage: <PREFIX>play https://youtube.com/watch?v=... or, just type keywords then bot will play the first result from youtube, or play with file upload.\nif passed playlist url and passed it with \"shuffle\" or \"random\" as last argments, playlist queue will be shuffled.")]
 async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
-    let all_args = args.iter::<String>().map(|arg| arg.unwrap_or_default()).collect::<Vec<String>>();
+    let all_args = args
+        .iter::<String>()
+        .map(|arg| arg.unwrap_or_default())
+        .collect::<Vec<String>>();
 
     if all_args.len() == 0 {
         check_msg(
@@ -25,14 +28,22 @@ async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     let url = if Url::parse(all_args.first().unwrap_or(&String::new()).as_str()).is_ok() {
         all_args[0].clone()
     } else {
-        format!("ytsearch1:{}", all_args.iter().map(|s| s.to_string()).collect::<Vec<_>>().join(" "))
+        format!(
+            "ytsearch1:{}",
+            all_args
+                .iter()
+                .map(|s| s.to_string())
+                .collect::<Vec<_>>()
+                .join(" ")
+        )
     };
 
-    let enable_shuffle = if SHUFFLE_WORDS.contains(&all_args.last().unwrap_or(&String::new()).as_str()) {
-        true
-    } else {
-        false
-    };
+    let enable_shuffle =
+        if SHUFFLE_WORDS.contains(&all_args.last().unwrap_or(&String::new()).as_str()) {
+            true
+        } else {
+            false
+        };
 
     let guild = if let Some(g) = msg.guild(&ctx.cache) {
         g

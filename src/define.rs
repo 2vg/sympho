@@ -51,7 +51,15 @@ impl EventHandler for Handler {
 )]
 pub struct General;
 
-pub const EXCLUDE_HOOK: &[&str] = &["help", "q", "queue", "current", "np", "nowplaying", "なうぷれ"];
+pub const EXCLUDE_HOOK: &[&str] = &[
+    "help",
+    "q",
+    "queue",
+    "current",
+    "np",
+    "nowplaying",
+    "なうぷれ",
+];
 
 pub fn check_msg(result: SerenityResult<Message>) {
     if let Err(why) = result {
@@ -249,7 +257,11 @@ pub fn get_audio_file_info(url: &str) -> Result<(String, Duration)> {
         ],
         Some(Duration::new(5, 0)),
     )?;
-    let title = String::from(info["format"]["tags"]["TITLE"].as_str().unwrap_or("Unknown"));
+    let title = String::from(
+        info["format"]["tags"]["TITLE"]
+            .as_str()
+            .unwrap_or("Unknown"),
+    );
     let dur = Duration::from_secs_f64(
         info["format"]["duration"]
             .as_str()

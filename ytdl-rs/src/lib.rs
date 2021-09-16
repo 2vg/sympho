@@ -56,7 +56,7 @@ pub enum Error {
     ProcessTimeout,
 
     /// Pyo3 Error.
-    Pyo3Error
+    Pyo3Error,
 }
 
 impl From<std::io::Error> for Error {
@@ -256,7 +256,10 @@ impl YoutubeDl {
 
     /// Set the `--socket-timeout` command line flag.
     pub fn socket_timeout<I: Into<i32>>(&mut self, socket_timeout: I) -> &mut Self {
-        self.inner_options = self.inner_options.clone().set_socket_timeout(socket_timeout.into());
+        self.inner_options = self
+            .inner_options
+            .clone()
+            .set_socket_timeout(socket_timeout.into());
         self
     }
 
@@ -282,13 +285,20 @@ impl YoutubeDl {
 
     /// Set the `-u` and `-p` command line flags.
     pub fn auth<S: Into<String>>(&mut self, username: S, password: S) -> &mut Self {
-        self.inner_options = self.inner_options.clone().set_username(username.into()).set_password(password.into());
+        self.inner_options = self
+            .inner_options
+            .clone()
+            .set_username(username.into())
+            .set_password(password.into());
         self
     }
 
     /// Specify a file with cookies in Netscape cookie format.
     pub fn cookies<S: Into<String>>(&mut self, cookie_path: S) -> &mut Self {
-        self.inner_options = self.inner_options.clone().set_cookiefile(cookie_path.into());
+        self.inner_options = self
+            .inner_options
+            .clone()
+            .set_cookiefile(cookie_path.into());
         self
     }
 
