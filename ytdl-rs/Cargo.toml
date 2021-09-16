@@ -1,0 +1,15 @@
+[package]
+name = "ytdl-rs"
+version = "0.1.0"
+authors = ["uru <mail@nyaa.gg>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serde = { version = "1.0.130", features = ["derive"] }
+serde_json = "1.0.68"
+serde_derive = "1.0.130"
+youtube_dl_pyo3 = { path = "youtube_dl_pyo3" }
+anyhow = "1.0.44"
+log = "0.4.14"
