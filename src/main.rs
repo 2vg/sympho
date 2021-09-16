@@ -8,7 +8,7 @@ async fn before(ctx: &Context, msg: &Message, command_name: &str) -> bool {
         return true;
     }
 
-    let guild = if let Some(g) = msg.guild(&ctx.cache).await {
+    let guild = if let Some(g) = msg.guild(&ctx.cache) {
         g
     } else {
         return false;
