@@ -3,14 +3,21 @@ Sympho
 
 simple discord music bot for my hobby.</br>
 
+## Still WIP
+Sympho is still under development, and unstable.</br>
+I think the current implementation can handle most use cases, but I'm aiming for a great Discord Music Bot made with Rust!</br>
+I guess features change frequently, but i promise that the commands and build methods will remain almost unchanged.(maybe :3)</br>
+See the [TODO](#todo) section for information on features to be implemented, etc.</br>
+
 ## Feature
 
-- written by Rust✨
-- play videos(you know, audio only) from many sites(depends on youtube-dl extractors)
-- play all from playlist
-- no using songbird's builtin-queue, sympho have unique queue system
-- Restrictions on command use based on role name(on default, sympho will check user have role that name called `DJUser`). you can remove it from the code if dont need it
-- enough commands(default prefix is `!`, u can change define env `SYMPHO_PREFIX`)</br>
+- written by Rust ✨
+- because ↑, low binary size, blazing fast, and very small memory footprint 🚀
+- play videos(you know, audio only) from many sites(depends on youtube-dl extractors) 🎥
+- support to play from playlist, it also can be shuffled 🎶
+- no using songbird's builtin-queue, sympho have unique queue system 💪
+- Restrictions on command use based on role name(on default, sympho will check user have role that name called `DJUser`). you can remove it from the code if dont need it (**recommanded to remove this if u want to share to use Bot**) 👷
+- enough commands(default prefix is `!`, u can change define env `SYMPHO_PREFIX`) 📌</br>
   <details>
     <summary>command list (click to expand/collapse)</summary>
 
@@ -43,9 +50,10 @@ simple discord music bot for my hobby.</br>
 
 ## TODO
 
-- [ ] add more command(?)
-- [ ] To avoid complexity, remove arguments from the command and split it into multiple commands
+- [ ] add more command(?) (plan: `seek`, `shuffle` for queue, etc.)
+- [ ] To avoid complexity, remove arguments from the command and split it into multiple commands(plan: The split of the `play` command)
 - [ ] Add message when a command fails
+- [ ] Allow role limits to be controlled by environment variables
 - [ ] Faster video metadata acquisition *1
 - [x] more refactoring
 - [x] basic refactoring
@@ -62,21 +70,24 @@ In the future, we'll need something like `youtube-dl` written in Rust :3</br>
 
 ## Advantages over other bots
 
-- All written in Rust
-- Completely open source, and Easy to build (just set `DISCORD_TOKEN` env then run `cargo run`)
+- All written in Rust, so small single binary, blazing fast, and very small memory footprint
+- Completely open source, and Easy to build (just set `DISCORD_TOKEN` env then run `cargo run --release`)
+- Anyone can host Sympho on your server
 - Sympho can play the uploaded audio file
 - Depends on youtube-dl, but not limited to Youtube or Soundcloud URLs(For example, sympho also accept bilibili videos)
-- There are no premier restrictions like Rythm bot etc.
-- The code isn't too dirty, so anyone can customize it as like, for self-host
+- There are no premium restrictions, don't waste your money
+- The code isn't too dirty, so anyone can customize it like a addtional command, addtional features
 
 ## Dis-Advantages over other bots
 
-- Missing some commands
+- Missing some commands(?)
 - Self-hosting costs
 - Difficult to customize for people who can't Rust
 - There is no such thing as an effect function for song
-- The library is still unstable
-- The audio area is still unstable(there is a problem with the sound being played, or the sound at the start of playback is a little strange.)
+- There is no command to operation related to the queue(but i have plan)
+- Unstable(e.g. there is a problem with the sound being played, or the sound at the start of playback is a little strange.)
+- And... I'm the only one who claims the code isn't dirty QwQ
+- I'M THE ONlY DEVELOPER FOR SYMPHO
 
 ## Require
 
@@ -84,6 +95,7 @@ In the future, we'll need something like `youtube-dl` written in Rust :3</br>
 - ffmpeg
 - libopus
 - youtube-dl
+- ~~Python3 (for pyo3)~~(under development's feature)
 
 see more information [Songbird's README#dependencies](https://github.com/serenity-rs/songbird#dependencies)
 
