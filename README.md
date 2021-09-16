@@ -54,7 +54,7 @@ See the [TODO](#todo) section for information on features to be implemented, etc
 - [ ] To avoid complexity, remove arguments from the command and split it into multiple commands(plan: The split of the `play` command)
 - [ ] Add message when a command fails
 - [ ] Allow role limits to be controlled by environment variables
-- [ ] Faster video metadata acquisition *1
+- [x] Faster video metadata acquisition(maybe done? idk) *1
 - [x] more refactoring
 - [x] basic refactoring
 - [x] remove all `unwrap()`
@@ -94,8 +94,8 @@ In the future, we'll need something like `youtube-dl` written in Rust :3</br>
 - rust
 - ffmpeg
 - libopus
-- youtube-dl
-- ~~Python3 (for pyo3)~~(under development's feature)
+- youtube-dl(need binary like a `apt install youtube-dl`, and `pip install youtube-dl`)
+- Python (for pyo3)
 
 see more information [Songbird's README#dependencies](https://github.com/serenity-rs/songbird#dependencies)
 
