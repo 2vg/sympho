@@ -41,6 +41,25 @@ simple discord music bot for my hobby.</br>
     - `queue` :</br>Shows a list of songs in the queue. index is 0 first.
   </details>
 
+## TODO
+
+- [ ] add more command(?)
+- [ ] To avoid complexity, remove arguments from the command and split it into multiple commands
+- [ ] Add message when a command fails
+- [ ] Faster video metadata acquisition *1
+- [x] more refactoring
+- [x] basic refactoring
+- [x] remove all `unwrap()`
+- [x] make unique queue system, not `builtin-queue`
+
+*1:
+> Currently, Sympho uses `youtube-dl` or` ffprobe` for files to get metadata such as video titles.</br>
+This process can be very slow to spawn a child process, execute commands within that child process, and parse the results.</br>
+That's fine for `ffprobe`, but not for` youtube-dl`.</br>
+Currently, I am experimenting with using `pyo3` in the development environment and executing it directly from the` youtube-dl` module of Python.</br>
+This will improve the retrieval of metadata.</br>
+In the future, we'll need something like `youtube-dl` written in Rust :3</br>
+
 ## Advantages over other bots
 
 - All written in Rust
@@ -73,11 +92,3 @@ tested on Windows10 x64 and Ubuntu 20.04 with rust nightly 1.53 ~ 1.54
 ## Build and run
 
 clone, set token to `DISCORD_TOKEN` env var, then `cargo build`, then run it.
-
-## TODO
-
-- [ ] add more command(?)
-- [x] more refactoring
-- [x] basic refactoring
-- [x] remove all `unwrap()`
-- [x] make unique queue system, not `builtin-queue`
