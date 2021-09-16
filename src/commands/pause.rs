@@ -5,7 +5,7 @@ use crate::import::*;
 #[only_in(guilds)]
 #[description("Pause the music currently playing.")]
 async fn pause(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
-    let guild = if let Some(g) = msg.guild(&ctx.cache).await {
+    let guild = if let Some(g) = msg.guild(&ctx.cache) {
         g
     } else {
         check_msg(

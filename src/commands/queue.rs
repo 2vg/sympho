@@ -12,7 +12,7 @@ async fn queue(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         0
     };
 
-    let guild = if let Some(g) = msg.guild(&ctx.cache).await {
+    let guild = if let Some(g) = msg.guild(&ctx.cache) {
         g
     } else {
         check_msg(

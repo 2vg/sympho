@@ -34,7 +34,7 @@ async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         false
     };
 
-    let guild = if let Some(g) = msg.guild(&ctx.cache).await {
+    let guild = if let Some(g) = msg.guild(&ctx.cache) {
         g
     } else {
         check_msg(
@@ -116,7 +116,7 @@ pub async fn enqueue(ctx: &Context, key: u64, url: String, enable_shuffle: bool)
         } else {
             let output = YoutubeDl::new(&url)
                 .flat_playlist(true)
-                .socket_timeout("3")
+                .socket_timeout(5)
                 .run();
 
             if let Ok(yt) = output {

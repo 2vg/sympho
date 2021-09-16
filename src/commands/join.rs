@@ -6,7 +6,7 @@ use crate::import::*;
 #[only_in(guilds)]
 #[description("Join the VC channel with the user who called !join.")]
 async fn join(ctx: &Context, msg: &Message) -> CommandResult {
-    let guild = if let Some(g) = msg.guild(&ctx.cache).await {
+    let guild = if let Some(g) = msg.guild(&ctx.cache) {
         g
     } else {
         check_msg(

@@ -47,5 +47,5 @@ pub use {
     tokio::sync::RwLock,
     url::Url,
     wait_timeout::ChildExt,
-    youtube_dl::{YoutubeDl, YoutubeDlOutput},
+    ytdl_rs::{YoutubeDl, YoutubeDlOutput},
 };
